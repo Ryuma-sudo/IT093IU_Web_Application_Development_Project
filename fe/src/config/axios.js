@@ -23,11 +23,6 @@ const axiosInstance = axios.create({
     withCredentials: true,
 });
 
-const axiosInstance = axios.create({
-	baseURL: getApiBaseUrl(),
-	withCredentials: true, // Always send cookies
-});
-
 axiosInstance.interceptors.request.use(
 	(config) => {
 		const token = useUserStore.getState().token;
