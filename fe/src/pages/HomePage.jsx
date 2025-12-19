@@ -118,7 +118,7 @@ const HomePage = () => {
                     {/* Section Header */}
                     <div className="text-center mb-16">
                         <h2 className="text-3xl sm:text-4xl font-bold text-nf-text mb-4">
-                            Why choose Netflex?
+                            Why choose NexFlixx?
                         </h2>
                         <p className="text-lg text-nf-text-secondary max-w-2xl mx-auto">
                             Everything you need for the ultimate streaming experience

@@ -82,7 +82,7 @@ const Navbar = () => {
                         <div className="flex shrink-0 items-center">
                             <Link to="/" className="group">
                                 <OptimizedImage
-                                    alt="Netflex"
+                                    alt="NexFlixx"
                                     src="../assets/logo.png"
                                     className="h-14 w-auto transition-transform duration-200 group-hover:scale-105"
                                 />

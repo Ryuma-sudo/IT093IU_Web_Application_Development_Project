@@ -71,11 +71,11 @@ const Footer = () => {
                             <div className="w-8 h-8 rounded-lg bg-nf-accent/10 flex items-center justify-center">
                                 <span className="text-nf-accent font-bold text-sm">N</span>
                             </div>
-                            <span className="text-nf-text font-semibold">Netflex</span>
+                            <span className="text-nf-text font-semibold">NexFlixx</span>
                         </div>
                         
                         <p className="text-sm text-nf-text-muted">
-                            © {new Date().getFullYear()} Netflex. All rights reserved.
+                            © {new Date().getFullYear()} NexFlixx. All rights reserved.
                         </p>
 
                         {/* Social links placeholder */}
