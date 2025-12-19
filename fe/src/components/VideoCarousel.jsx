@@ -46,13 +46,16 @@ const VideoCarousel = () => {
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
-    };    const closeTrailer = () => {
+    };
+
+    const closeTrailer = () => {
         setIsClosing(true);
         setTimeout(() => {
             setShowTrailer(false);
             setIsClosing(false);
-        }, 300); // Match the fade-out duration
-    };    // Function to scroll to the next section (VideoSection)
+        }, 300);
+    };
+
     const scrollToNextSection = () => {
         const nextSection = document.querySelector('[data-video-section]');
         if (nextSection) {
@@ -63,29 +66,26 @@ const VideoCarousel = () => {
         }
     };
 
-    // Function to scroll back to the VideoCarousel (top)
     const scrollToCarousel = () => {
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
         });
-    };    // Handle scroll detection for both directions
+    };
+
     const handleScroll = (event) => {
         const scrollThreshold = 50;
         
-        // Use a ref to check current scrolling state to avoid stale closure
         if (!isScrolling) {
             const currentScrollY = window.scrollY;
             const carouselHeight = carouselRef.current?.offsetHeight || 0;
             
             if (event.deltaY > scrollThreshold) {
-                // Scrolling down - go to next section (only when near bottom of carousel)
                 if (currentScrollY < carouselHeight * 0.8) {
                     event.preventDefault();
                     setIsScrolling(true);
                     scrollToNextSection();
                     
-                    // Reset scrolling state after navigation
                     if (scrollTimeoutRef.current) {
                         clearTimeout(scrollTimeoutRef.current);
                     }
@@ -94,15 +94,12 @@ const VideoCarousel = () => {
                     }, 1000);
                 }
             } else if (event.deltaY < -scrollThreshold) {
-                // Scrolling up - go back to carousel (only when at the top boundary of VideoSection)
-                // More precise boundary detection: only trigger when very close to the carousel bottom
-                const boundaryZone = carouselHeight * 0.1; // 10% boundary zone
+                const boundaryZone = carouselHeight * 0.1;
                 if (currentScrollY > carouselHeight - boundaryZone && currentScrollY <= carouselHeight + boundaryZone) {
                     event.preventDefault();
                     setIsScrolling(true);
                     scrollToCarousel();
                     
-                    // Reset scrolling state after navigation
                     if (scrollTimeoutRef.current) {
                         clearTimeout(scrollTimeoutRef.current);
                     }
@@ -114,31 +111,32 @@ const VideoCarousel = () => {
         }
     };
 
-    // Preload images for smoother transitions
+    // Preload images
     useEffect(() => {
         carouselVideos.forEach(video => {
             const img = new Image();
             img.src = video.carouselImg;
         });
     }, []);
+
     useEffect(() => {
         resetTimeout();
         timeoutRef.current = setTimeout(() => {
             setCurrent((prevIndex) =>
                 prevIndex === carouselVideos.length - 1 ? 0 : prevIndex + 1
             );
-        }, 8000); // Auto-advance every 8 seconds
+        }, 8000);
     
         return () => {
             resetTimeout();
         };
-    }, [current]);    // Handle escape key to close modal and arrow keys for navigation
+    }, [current]);
+
     useEffect(() => {
         const handleKeyDown = (event) => {
             if (event.key === 'Escape' && showTrailer) {
                 closeTrailer();
             } else if (!showTrailer && !isScrolling) {
-                // Only handle navigation keys when modal is not open and not currently scrolling
                 if (event.key === 'ArrowDown' || event.key === 'PageDown') {
                     event.preventDefault();
                     setIsScrolling(true);
@@ -165,30 +163,31 @@ const VideoCarousel = () => {
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [showTrailer, isScrolling]);    // Add scroll listener for bidirectional navigation
+    }, [showTrailer, isScrolling]);
+
     useEffect(() => {
         const handleWheelEvent = (event) => {
             handleScroll(event);
         };
         
-        // Use document level listener for global scroll navigation
         document.addEventListener('wheel', handleWheelEvent, { passive: false });
         
         return () => {
             document.removeEventListener('wheel', handleWheelEvent);
         };
-    }, []); // Remove isScrolling dependency to prevent re-mounting
+    }, []);
     
-    // Separate cleanup effect for scroll timeout
     useEffect(() => {
         return () => {
             if (scrollTimeoutRef.current) {
                 clearTimeout(scrollTimeoutRef.current);
             }
         };
-    }, []);return (
-        <div ref={carouselRef} className="w-full overflow-hidden relative aspect-[16/9] max-h-[1024vh]">
-            {/* Render all slides stacked on top of each other */}
+    }, []);
+
+    return (
+        <div ref={carouselRef} className="w-full overflow-hidden relative aspect-[16/9] max-h-[100vh]">
+            {/* Slides */}
             {carouselVideos.map((video, index) => (
                 <div 
                     key={video.id} 
@@ -198,7 +197,7 @@ const VideoCarousel = () => {
                             : 'opacity-0 scale-105 z-0'
                     }`}
                 >
-                    <div className="relative w-full h-full bg-gray-900">
+                    <div className="relative w-full h-full bg-nf-bg">
                         <img
                             src={video.carouselImg}
                             alt={`Slide ${video.id + 1}`}
@@ -213,11 +212,17 @@ const VideoCarousel = () => {
                         />
                     </div>
                 </div>
-            ))}            {/* Left overlay with text */}
-            <div className="absolute top-0 left-0 h-full w-full bg-gradient-to-r from-black/90 via-black/40 to-transparent z-20">
-                <div className="h-full flex items-center text-white">
+            ))}
+
+            {/* Gradient overlays */}
+            <div className="absolute inset-0 bg-gradient-to-r from-nf-bg via-nf-bg/50 to-transparent z-20" />
+            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-nf-bg via-nf-bg/80 to-transparent z-10" />
+
+            {/* Content overlay */}
+            <div className="absolute inset-0 z-20">
+                <div className="h-full flex items-center">
                     <div className="relative h-[100px] lg:h-[600px] w-full max-w-2xl ml-8 sm:ml-12 md:ml-16 lg:ml-20 xl:ml-24 2xl:ml-32">
-                        {/* Render all text content stacked */}
+                        {/* Text content for each slide */}
                         {carouselVideos.map((video, index) => (
                             <div 
                                 key={index} 
@@ -227,52 +232,60 @@ const VideoCarousel = () => {
                                         : 'opacity-0 translate-y-8 scale-95'
                                 }`}
                             >
-                                <h1 className="text-4xl md:text-6xl font-bold mb-4">
+                                <h1 className="text-4xl md:text-6xl font-bold text-nf-text mb-4 drop-shadow-lg">
                                     {video.title}
                                 </h1>
 
-                                <ul className="flex gap-x-2 mb-3">
+                                <ul className="flex gap-2 mb-4">
                                     {video.tags.map((tag) => (
-                                        <li key={tag} className="w-fit px-3 py-1 bg-pm-purple font-semibold rounded-full">
+                                        <li key={tag} className="nf-tag">
                                             {tag}
                                         </li>
                                     ))}
                                 </ul>
 
-                                <p className="hidden lg:block text-md md:text-lg text-gray-300 mb-6 max-w-md">
+                                <p className="hidden lg:block text-lg text-nf-text-secondary mb-8 max-w-md">
                                     {video.description}
                                 </p>
                             </div>
-                        ))}                        {/* Buttons and Indicators - Fixed at bottom */}
-                        <div className="hidden md:block absolute top-40 lg:top-50 left-0 w-full">                            <div className="flex items-center gap-x-2 mb-10">
-                                
+                        ))}
 
-                                <Link to="#" className="flex items-center gap-x-2 bg-pm-purple hover:bg-pm-purple-hover transition-all duration-300 ease-out text-white font-semibold px-6 py-3 rounded transform hover:scale-105">
-                                    <PlayIcon className="w-5" />
+                        {/* Action buttons - fixed position */}
+                        <div className="hidden md:block absolute top-40 lg:top-52 left-0 w-full">
+                            <div className="flex items-center gap-3 mb-10">
+                                <Link 
+                                    to="#" 
+                                    className="nf-btn nf-btn-primary"
+                                >
+                                    <PlayIcon className="w-5 h-5" />
                                     Watch Now
-                                </Link>                                <button 
+                                </Link>
+
+                                <button 
                                     onClick={() => {
                                         setTrailerVideoIndex(current);
                                         setShowTrailer(true);
                                     }}
-                                    className="flex items-center gap-x-2 bg-transparent hover:bg-white/10 transition-all duration-300 ease-out text-white font-semibold px-6 py-3 rounded border border-white/30 hover:border-white/50 transform hover:scale-105"
+                                    className="nf-btn nf-btn-ghost backdrop-blur-sm"
                                 >
-                                    <PlayIcon className="w-5" />
+                                    <PlayIcon className="w-5 h-5" />
                                     Watch Trailer
                                 </button>
 
-                                <button className="border-2 border-pm-purple hover:border-pm-purple-hover hover:bg-pm-purple-hover transition-all duration-300 ease-out text-pm-purple hover:text-white font-semibold px-6 py-3 rounded cursor-pointer transform hover:scale-105">
-                                    <BookmarkIcon className="w-5" />
+                                <button className="p-3 rounded-lg border border-nf-border hover:border-nf-accent hover:bg-nf-accent/10 text-nf-text-secondary hover:text-nf-accent transition-all duration-200 cursor-pointer">
+                                    <BookmarkIcon className="w-5 h-5" />
                                 </button>
                             </div>
 
-                            {/* Line Indicators */}
-                            <div className="flex space-x-2">
+                            {/* Slide indicators */}
+                            <div className="flex gap-2">
                                 {carouselVideos.map((_, index) => (
-                                    <div
+                                    <button
                                         key={index}
-                                        className={`w-8 h-2 rounded-full transition-all duration-500 ease-out transform cursor-pointer hover:scale-110 ${
-                                            current === index ? "bg-white shadow-lg" : "bg-gray-400 hover:bg-gray-300"
+                                        className={`h-1.5 rounded-full transition-all duration-500 cursor-pointer ${
+                                            current === index 
+                                                ? "w-10 bg-nf-accent" 
+                                                : "w-6 bg-nf-text-muted/40 hover:bg-nf-text-muted"
                                         }`}
                                         onClick={() => {
                                             setCurrent(index);
@@ -284,34 +297,36 @@ const VideoCarousel = () => {
                         </div>
                     </div>
                 </div>
-            </div>            {/* Bottom dark overlay */}
-            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/100 to-transparent z-10 pointer-events-none" />            {/* Navigation Button */}
-            <div className="absolute bottom-8 sm:bottom-12 md:bottom-20 lg:bottom-50 right-4 sm:right-6 md:right-8 z-30 flex flex-col items-center gap-2 sm:gap-3">                {/* Keyboard hint */}
-                <div className="hidden lg:block text-center text-xs text-white/60 mb-2 font-medium">
-                    Use ↑↓ or scroll wheel
+            </div>
+
+            {/* Scroll down button */}
+            <div className="absolute bottom-8 sm:bottom-12 md:bottom-20 right-4 sm:right-6 md:right-8 z-30 flex flex-col items-center gap-2">
+                <div className="hidden lg:block text-center text-xs text-nf-text-muted mb-2 font-medium">
+                    Use ↑↓ or scroll
                 </div>
 
-                {/* Scroll Down Button */}
                 <button
                     onClick={scrollToNextSection}
-                    className="group flex flex-col items-center gap-1 p-2 sm:p-3 bg-black/40 hover:bg-black/60 rounded-full transition-all duration-300 ease-out transform hover:scale-110 hover:shadow-lg backdrop-blur-sm border border-white/20 hover:border-white/40 animate-bounce-gentle hover:animate-none"
-                    title="Scroll to videos (↓ or Page Down)"
+                    className="group flex flex-col items-center gap-1 p-3 nf-glass rounded-full transition-all duration-300 hover:scale-110 animate-bounce-gentle hover:animate-none"
+                    title="Scroll to videos"
                 >
-                    <ChevronDownIcon className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-white group-hover:text-pm-purple transition-colors duration-300" />
-                    <span className="text-[10px] sm:text-xs text-white/80 group-hover:text-white transition-colors duration-300 font-medium">
+                    <ChevronDownIcon className="w-5 h-5 text-nf-text-secondary group-hover:text-nf-accent transition-colors" />
+                    <span className="text-xs text-nf-text-muted group-hover:text-nf-text font-medium">
                         Explore
                     </span>
                 </button>
-            </div>{/* Trailer Modal */}
+            </div>
+
+            {/* Trailer Modal */}
             {showTrailer && (
                 <div 
-                    className={`fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
+                    className={`fixed inset-0 bg-nf-bg/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300 ${
                         isClosing ? 'animate-fade-out' : 'animate-fade-in'
                     }`}
                     onClick={closeTrailer}
                 >
                     <div 
-                        className={`relative bg-black rounded-lg overflow-hidden max-w-4xl w-full max-h-[80vh] transition-all duration-400 ${
+                        className={`relative nf-card-static overflow-hidden max-w-4xl w-full max-h-[80vh] transition-all duration-400 ${
                             isClosing ? 'animate-scale-down' : 'animate-scale-up'
                         }`}
                         onClick={(e) => e.stopPropagation()}
@@ -319,12 +334,14 @@ const VideoCarousel = () => {
                         {/* Close button */}
                         <button
                             onClick={closeTrailer}
-                            className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all duration-300 transform hover:scale-110 hover:rotate-90"
+                            className="absolute top-4 right-4 z-10 p-2 rounded-lg bg-nf-bg/80 hover:bg-nf-surface text-nf-text-secondary hover:text-nf-text transition-all duration-200"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                        </button>                        {/* Video iframe */}
+                        </button>
+
+                        {/* Video */}
                         <div className={`relative w-full transition-all duration-500 ${
                             isClosing ? 'animate-slide-down' : 'animate-slide-up'
                         }`} style={{ paddingBottom: '56.25%' }}>
@@ -338,11 +355,11 @@ const VideoCarousel = () => {
                             ></iframe>
                         </div>
 
-                        {/* Video title */}
-                        <div className={`p-4 bg-gray-900 transition-all duration-500 ${
+                        {/* Title bar */}
+                        <div className={`p-4 bg-nf-surface border-t border-nf-border transition-all duration-500 ${
                             isClosing ? 'animate-slide-down-delayed' : 'animate-slide-up-delayed'
                         }`}>
-                            <h3 className="text-white text-xl font-bold">
+                            <h3 className="text-nf-text text-xl font-bold">
                                 {carouselVideos[trailerVideoIndex].title} - Trailer
                             </h3>
                         </div>

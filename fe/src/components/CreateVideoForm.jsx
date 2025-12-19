@@ -7,10 +7,10 @@ import axios from '../config/axios';
 import { useVideoStore } from "../stores/useVideoStore";
 import { useCategoryStore } from "../stores/useCategoryStore";
 import ThumbnailSelector from "./ThumbnailSelector";
-import { CloudArrowUpIcon, LinkIcon, PlayIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import { FilmIcon, DocumentTextIcon, LinkIcon, PhotoIcon, TagIcon } from '@heroicons/react/24/outline';
 
 const CreateVideoForm = () => {
-	const { id } = useParams(); // Get user ID from URL
+	const { id } = useParams();
 	const { createVideo, loading } = useVideoStore();
 	const { categories, fetchAllCategories } = useCategoryStore();
 	const videoInputRef = useRef(null);
@@ -49,214 +49,86 @@ const CreateVideoForm = () => {
 		}
 	};
 
-	const handleVideoUpload = async (e) => {
-		const file = e.target.files[0];
-		if (!file) return;
-
-		// Validate file type
-		if (!file.type.startsWith('video/')) {
-			toast.error("Please select a video file");
-			return;
+	const formFields = [
+		{
+			id: 'title',
+			label: 'Title',
+			type: 'text',
+			icon: FilmIcon,
+			placeholder: 'Enter video title',
+			required: true
+		},
+		{
+			id: 'description',
+			label: 'Description',
+			type: 'textarea',
+			icon: DocumentTextIcon,
+			placeholder: 'Describe your video',
+			required: true,
+			rows: 3
+		},
+		{
+			id: 'url',
+			label: 'Video URL',
+			type: 'text',
+			icon: LinkIcon,
+			placeholder: 'https://... or /videos/filename.mp4',
+			required: true
 		}
-
-		// Validate file size (100MB limit)
-		if (file.size > 100 * 1024 * 1024) {
-			toast.error("Video file must be less than 100MB");
-			return;
-		}
-
-		setIsUploading(true);
-		setUploadProgress(0);
-
-		const formData = new FormData();
-		formData.append('file', file);
-
-		try {
-			const response = await axios.post('/uploads/video', formData, {
-				headers: { 'Content-Type': 'multipart/form-data' },
-				withCredentials: true,
-				onUploadProgress: (progressEvent) => {
-					const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-					setUploadProgress(progress);
-				}
-			});
-
-			const videoUrl = response.data.url;
-			setNewVideo({ ...newVideo, url: videoUrl });
-			setVideoPreview(videoUrl);
-			toast.success("Video uploaded successfully!");
-		} catch (error) {
-			console.error("Error uploading video:", error);
-			toast.error(error.response?.data?.message || "Failed to upload video");
-		} finally {
-			setIsUploading(false);
-		}
-	};
-
-	const clearVideo = () => {
-		setNewVideo({ ...newVideo, url: "" });
-		setVideoPreview(null);
-		setUploadProgress(0);
-		if (videoInputRef.current) {
-			videoInputRef.current.value = "";
-		}
-	};
+	];
 
 	return (
 		<motion.div
-			className='bg-pm-gray shadow-lg rounded-lg p-8 mb-8 max-w-xl mx-auto'
+			className='nf-card-static p-8 max-w-xl mx-auto'
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.8 }}
+			transition={{ duration: 0.5 }}
 		>
-			<h2 className='text-2xl font-semibold mb-6 text-white'>Create Video</h2>
-
-			<form onSubmit={handleSubmit} className='space-y-4'>
-				<div>
-					<label htmlFor='name' className='block text-sm font-medium text-white'>
-						Title
-					</label>
-					<input
-						type='text'
-						id='title'
-						name='title'
-						value={newVideo.title}
-						onChange={(e) => setNewVideo({ ...newVideo, title: e.target.value })}
-						className='mt-1 block w-full bg-primary-text border border-brown-600 rounded-md shadow-sm py-2
-						 px-3 text-white focus:outline-none focus:ring-2
-						focus:ring-brown-500 focus:border-brown-500'
-						required
-					/>
+			<div className="flex items-center gap-3 mb-6">
+				<div className="p-2.5 rounded-lg bg-nf-accent/10">
+					<FilmIcon className="w-6 h-6 text-nf-accent" />
 				</div>
+				<h2 className='text-2xl font-semibold text-nf-text'>Create New Video</h2>
+			</div>
 
-				<div>
-					<label htmlFor='description' className='block text-sm font-medium text-white'>
-						Description
-					</label>
-					<textarea
-						id='description'
-						name='description'
-						value={newVideo.description}
-						onChange={(e) => setNewVideo({ ...newVideo, description: e.target.value })}
-						rows='3'
-						className='mt-1 block w-full bg-primary-text border border-brown-600 rounded-md shadow-sm
-						 py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-brown-500 
-						 focus:border-brown-500'
-						required
-					/>
-				</div>
-
-				{/* Video Upload Section */}
-				<div>
-					<label className='block text-sm font-medium text-white mb-2'>
-						Video
-					</label>
-
-					{/* Mode Selector */}
-					<div className="flex gap-2 mb-3">
-						<button
-							type="button"
-							onClick={() => setVideoMode('upload')}
-							className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer ${videoMode === 'upload'
-								? 'bg-pm-purple text-white shadow-lg shadow-pm-purple/30'
-								: 'bg-se-gray text-gray-300 hover:bg-pm-purple/50'
-								}`}
-						>
-							<CloudArrowUpIcon className="w-4 h-4" />
-							Upload
-						</button>
-						<button
-							type="button"
-							onClick={() => setVideoMode('url')}
-							className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer ${videoMode === 'url'
-								? 'bg-pm-purple text-white shadow-lg shadow-pm-purple/30'
-								: 'bg-se-gray text-gray-300 hover:bg-pm-purple/50'
-								}`}
-						>
-							<LinkIcon className="w-4 h-4" />
-							URL
-						</button>
-					</div>
-
-					{/* Upload Mode */}
-					{videoMode === 'upload' && (
-						<div className="bg-se-gray rounded-lg p-4">
-							{!videoPreview ? (
-								<div
-									onClick={() => videoInputRef.current?.click()}
-									className={`border-2 border-dashed border-gray-500 rounded-lg p-8 text-center cursor-pointer
-										hover:border-pm-purple hover:bg-pm-purple/10 transition-all duration-200
-										${isUploading ? 'pointer-events-none' : ''}`}
-								>
-									{isUploading ? (
-										<div className="flex flex-col items-center gap-3">
-											<div className="w-16 h-16 rounded-full bg-pm-purple/20 flex items-center justify-center">
-												<div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-pm-purple"></div>
-											</div>
-											<p className="text-white font-medium">Uploading... {uploadProgress}%</p>
-											<div className="w-full bg-gray-700 rounded-full h-2">
-												<div
-													className="bg-pm-purple h-2 rounded-full transition-all duration-300"
-													style={{ width: `${uploadProgress}%` }}
-												></div>
-											</div>
-										</div>
-									) : (
-										<div className="flex flex-col items-center gap-3">
-											<div className="w-16 h-16 rounded-full bg-pm-purple/20 flex items-center justify-center">
-												<CloudArrowUpIcon className="w-8 h-8 text-pm-purple" />
-											</div>
-											<div>
-												<p className="text-white font-medium">Click to upload video</p>
-												<p className="text-sm text-gray-400">MP4, WebM, MOV up to 100MB</p>
-											</div>
-										</div>
-									)}
-								</div>
+			<form onSubmit={handleSubmit} className='space-y-5'>
+				{formFields.map((field) => (
+					<div key={field.id}>
+						<label htmlFor={field.id} className='block text-sm font-medium text-nf-text mb-2'>
+							{field.label}
+						</label>
+						<div className="relative">
+							<field.icon className="absolute left-3.5 top-3 w-5 h-5 text-nf-text-muted" />
+							{field.type === 'textarea' ? (
+								<textarea
+									id={field.id}
+									name={field.id}
+									value={newVideo[field.id]}
+									onChange={(e) => setNewVideo({ ...newVideo, [field.id]: e.target.value })}
+									rows={field.rows}
+									placeholder={field.placeholder}
+									className='nf-input pl-11 resize-none'
+									required={field.required}
+								/>
 							) : (
-								<div className="relative">
-									<video
-										src={videoPreview}
-										className="w-full rounded-lg max-h-48 object-contain bg-black"
-										controls
-									/>
-									<button
-										type="button"
-										onClick={clearVideo}
-										className="absolute top-2 right-2 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
-									>
-										<XMarkIcon className="w-5 h-5 text-white" />
-									</button>
-								</div>
+								<input
+									type={field.type}
+									id={field.id}
+									name={field.id}
+									value={newVideo[field.id]}
+									onChange={(e) => setNewVideo({ ...newVideo, [field.id]: e.target.value })}
+									placeholder={field.placeholder}
+									className='nf-input pl-11'
+									required={field.required}
+								/>
 							)}
-							<input
-								ref={videoInputRef}
-								type="file"
-								accept="video/*"
-								onChange={handleVideoUpload}
-								className="hidden"
-							/>
 						</div>
-					)}
-
-					{/* URL Mode */}
-					{videoMode === 'url' && (
-						<input
-							type='text'
-							id='url'
-							name='url'
-							value={newVideo.url}
-							onChange={(e) => setNewVideo({ ...newVideo, url: e.target.value })}
-							placeholder='https://... or /videos/filename.mp4'
-							className='mt-1 block w-full bg-primary-text border border-brown-600 rounded-md shadow-sm 
-							py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-brown-500
-							 focus:border-brown-500'
-						/>
-					)}
-				</div>
+					</div>
+				))}
 
 				<div>
-					<label className='block text-sm font-medium text-white mb-2'>
+					<label className='flex items-center gap-2 text-sm font-medium text-nf-text mb-2'>
+						<PhotoIcon className="w-5 h-5 text-nf-text-muted" />
 						Thumbnail
 					</label>
 					<ThumbnailSelector
@@ -266,7 +138,8 @@ const CreateVideoForm = () => {
 				</div>
 
 				<div>
-					<label htmlFor='category' className='block text-sm font-medium text-white'>
+					<label htmlFor='category' className='flex items-center gap-2 text-sm font-medium text-nf-text mb-2'>
+						<TagIcon className="w-5 h-5 text-nf-text-muted" />
 						Category
 					</label>
 					<select
@@ -274,14 +147,12 @@ const CreateVideoForm = () => {
 						name='category'
 						value={newVideo.categoryId}
 						onChange={(e) => setNewVideo({ ...newVideo, categoryId: e.target.value })}
-						className='mt-1 block w-full bg-pm-gray border border-pm-purple rounded-md
-						 shadow-sm py-2 px-3 text-white focus:outline-none 
-						 focus:ring-2 focus:ring-pm-purple-hover focus:border-pm-purple-hover'
+						className='nf-input cursor-pointer'
 						required
 					>
-						<option value=''>Select a category</option>
+						<option value='' className="bg-nf-surface">Select a category</option>
 						{categories.map((category) => (
-							<option key={category.id} value={category.id}>
+							<option key={category.id} value={category.id} className="bg-nf-surface">
 								{category.name}
 							</option>
 						))}
@@ -290,19 +161,19 @@ const CreateVideoForm = () => {
 
 				<button
 					type='submit'
-					className='w-full flex justify-center py-2 px-4 border border-transparent rounded-md 
-					shadow-sm text-sm font-medium text-white bg-pm-purple hover:bg-pm-purple-hover 
-					focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50'
-					disabled={loading || isUploading}
+					className='nf-btn nf-btn-primary w-full py-3'
+					disabled={loading}
 				>
 					{loading ? (
-						<>
+						<span className="flex items-center gap-2">
+							<svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+								<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+								<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+							</svg>
 							Creating...
-						</>
+						</span>
 					) : (
-						<>
-							Create Video
-						</>
+						'Create Video'
 					)}
 				</button>
 			</form>

@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { ClockIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 const SearchCard = ({ 
   suggestedMovies = [], 
@@ -8,40 +9,74 @@ const SearchCard = ({
   onRecentSearchClick 
 }) => {
   return (
-    <div className="w-full max-w-2xl bg-pm-gray text-white rounded-lg shadow-lg">
+    <div className="w-full">
       {/* Recent Searches Section */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Recent Searches</h2>
-        <div className="space-y-2">
-          {recentSearches.map((search, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between p-2 hover:bg-pm-purple-hover rounded-lg cursor-pointer transition-colors"
-              onClick={() => onRecentSearchClick(search)}
-            >
-              <div className="flex items-center">
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                <span className="">{search}</span>
-              </div>
-              <span className="text-xs text-gray-500">
-                {new Date().toLocaleDateString()}
-              </span>
-            </div>
-          ))}
+      {recentSearches.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <ClockIcon className="w-4 h-4 text-nf-text-muted" />
+            <h2 className="text-sm font-medium text-nf-text-muted uppercase tracking-wide">
+              Recent Searches
+            </h2>
+          </div>
+          <div className="space-y-1">
+            {recentSearches.map((search, index) => (
+              <button
+                key={index}
+                className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-nf-surface-hover text-left transition-colors cursor-pointer group"
+                onClick={() => onRecentSearchClick(search)}
+              >
+                <MagnifyingGlassIcon className="w-4 h-4 text-nf-text-muted group-hover:text-nf-accent transition-colors" />
+                <span className="text-nf-text-secondary group-hover:text-nf-text transition-colors flex-1">
+                  {search}
+                </span>
+                <span className="text-xs text-nf-text-dim">
+                  {new Date().toLocaleDateString()}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Suggested Movies Section */}
+      {suggestedMovies.length > 0 && (
+        <div className="mt-4">
+          <h2 className="text-sm font-medium text-nf-text-muted uppercase tracking-wide mb-3">
+            Suggestions
+          </h2>
+          <div className="space-y-2">
+            {suggestedMovies.map((movie) => (
+              <button
+                key={movie.id}
+                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-nf-surface-hover transition-colors cursor-pointer group"
+                onClick={() => onMovieClick(movie)}
+              >
+                <img 
+                  src={movie.poster} 
+                  alt={movie.title}
+                  className="w-12 h-16 object-cover rounded"
+                />
+                <div className="flex-1 text-left">
+                  <p className="text-nf-text font-medium group-hover:text-nf-accent transition-colors">
+                    {movie.title}
+                  </p>
+                  <p className="text-sm text-nf-text-muted">{movie.year}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {recentSearches.length === 0 && suggestedMovies.length === 0 && (
+        <div className="text-center py-4">
+          <p className="text-nf-text-muted text-sm">
+            Start typing to search...
+          </p>
+        </div>
+      )}
     </div>
   );
 };
@@ -60,4 +95,4 @@ SearchCard.propTypes = {
   onRecentSearchClick: PropTypes.func.isRequired,
 };
 
-export default SearchCard; 
+export default SearchCard;

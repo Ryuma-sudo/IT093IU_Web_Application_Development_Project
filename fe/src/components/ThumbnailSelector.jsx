@@ -5,26 +5,28 @@ import toast from 'react-hot-toast';
 import axios from '../config/axios';
 
 const ThumbnailSelector = ({ value, onChange }) => {
-  const [mode, setMode] = useState('existing'); // 'existing' | 'custom' | 'upload'
-  const [customUrl, setCustomUrl] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadedPreview, setUploadedPreview] = useState(null);
-  const fileInputRef = useRef(null);
-
-  // Determine which thumbnail is currently selected from existing
   const selectedThumbnail = AVAILABLE_THUMBNAILS.find(t =>
     value === getThumbnailPath(t.filename) || value === t.filename
   );
 
-  // Handle mode changes
+  const isCustomValue = value && !selectedThumbnail && (value.startsWith('http://') || value.startsWith('https://'));
+
+  const [mode, setMode] = useState(isCustomValue ? 'custom' : 'existing');
+  const [customUrl, setCustomUrl] = useState(isCustomValue ? value : '');
+
+  useEffect(() => {
+    if (value && !selectedThumbnail && (value.startsWith('http://') || value.startsWith('https://'))) {
+      setCustomUrl(value);
+      setMode('custom');
+    }
+  }, [value, selectedThumbnail]);
+
   useEffect(() => {
     if (mode === 'custom' && customUrl) {
       onChange(customUrl);
     }
   }, [mode, customUrl, onChange]);
 
-  // Handle custom URL changes
   const handleCustomUrlChange = (url) => {
     setCustomUrl(url);
     if (mode === 'custom') {
@@ -32,66 +34,10 @@ const ThumbnailSelector = ({ value, onChange }) => {
     }
   };
 
-  // Handle existing thumbnail selection
   const handleSelectExisting = (thumbnail) => {
     onChange(getThumbnailPath(thumbnail.filename));
   };
 
-  // Handle file upload
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error("Please select an image file");
-      return;
-    }
-
-    // Validate file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image file must be less than 10MB");
-      return;
-    }
-
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await axios.post('/uploads/thumbnail', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        withCredentials: true,
-        onUploadProgress: (progressEvent) => {
-          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setUploadProgress(progress);
-        }
-      });
-
-      const thumbnailUrl = response.data.url;
-      setUploadedPreview(thumbnailUrl);
-      onChange(thumbnailUrl);
-      toast.success("Thumbnail uploaded successfully!");
-    } catch (error) {
-      console.error("Error uploading thumbnail:", error);
-      toast.error(error.response?.data?.message || "Failed to upload thumbnail");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  // Clear uploaded thumbnail
-  const clearUpload = () => {
-    setUploadedPreview(null);
-    onChange('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  // Get preview image source
   const getPreviewSrc = () => {
     if (mode === 'existing' && selectedThumbnail) {
       return getThumbnailPath(selectedThumbnail.filename);
@@ -112,13 +58,14 @@ const ThumbnailSelector = ({ value, onChange }) => {
         <button
           type="button"
           onClick={() => setMode('existing')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer ${mode === 'existing'
-            ? 'bg-pm-purple text-white shadow-lg shadow-pm-purple/30'
-            : 'bg-se-gray text-gray-300 hover:bg-pm-purple/50'
-            }`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
+            mode === 'existing'
+              ? 'bg-nf-accent text-nf-bg shadow-lg shadow-nf-accent/20'
+              : 'bg-nf-surface text-nf-text-secondary hover:bg-nf-surface-hover hover:text-nf-text'
+          }`}
         >
           <PhotoIcon className="w-4 h-4" />
-          Existing
+          Preset
         </button>
         <button
           type="button"
@@ -134,10 +81,11 @@ const ThumbnailSelector = ({ value, onChange }) => {
         <button
           type="button"
           onClick={() => setMode('custom')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer ${mode === 'custom'
-            ? 'bg-pm-purple text-white shadow-lg shadow-pm-purple/30'
-            : 'bg-se-gray text-gray-300 hover:bg-pm-purple/50'
-            }`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer ${
+            mode === 'custom'
+              ? 'bg-nf-accent text-nf-bg shadow-lg shadow-nf-accent/20'
+              : 'bg-nf-surface text-nf-text-secondary hover:bg-nf-surface-hover hover:text-nf-text'
+          }`}
         >
           <LinkIcon className="w-4 h-4" />
           URL
@@ -145,7 +93,7 @@ const ThumbnailSelector = ({ value, onChange }) => {
       </div>
 
       {/* Mode Content */}
-      <div className="bg-se-gray rounded-lg p-4">
+      <div className="bg-nf-bg rounded-xl p-4 border border-nf-border">
         {/* Existing Thumbnails Grid */}
         {mode === 'existing' && (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
@@ -156,25 +104,24 @@ const ThumbnailSelector = ({ value, onChange }) => {
                   key={thumbnail.filename}
                   type="button"
                   onClick={() => handleSelectExisting(thumbnail)}
-                  className={`relative aspect-video rounded-lg overflow-hidden transition-all duration-200 cursor-pointer group ${isSelected
-                    ? 'ring-3 ring-pm-purple scale-105 shadow-lg shadow-pm-purple/40'
-                    : 'ring-1 ring-gray-600 hover:ring-pm-purple hover:scale-102'
-                    }`}
+                  className={`relative aspect-video rounded-lg overflow-hidden transition-all duration-200 cursor-pointer group ${
+                    isSelected
+                      ? 'ring-2 ring-nf-accent scale-105 shadow-lg shadow-nf-accent/30'
+                      : 'ring-1 ring-nf-border hover:ring-nf-accent/50 hover:scale-102'
+                  }`}
                 >
                   <img
                     src={getThumbnailPath(thumbnail.filename)}
                     alt={thumbnail.label}
                     className="w-full h-full object-contain bg-gray-800 p-2"
                   />
-                  {/* Selection overlay */}
                   {isSelected && (
-                    <div className="absolute inset-0 bg-pm-purple/30 flex items-center justify-center">
-                      <CheckIcon className="w-8 h-8 text-white drop-shadow-lg" />
+                    <div className="absolute inset-0 bg-nf-accent/20 flex items-center justify-center">
+                      <CheckIcon className="w-8 h-8 text-nf-accent drop-shadow-lg" />
                     </div>
                   )}
-                  {/* Label on hover */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-xs text-white truncate">{thumbnail.label}</span>
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-nf-bg/90 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-xs text-nf-text truncate">{thumbnail.label}</span>
                   </div>
                 </button>
               );
@@ -250,21 +197,20 @@ const ThumbnailSelector = ({ value, onChange }) => {
 
         {/* Custom URL Input */}
         {mode === 'custom' && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <input
               type="text"
               value={customUrl}
               onChange={(e) => handleCustomUrlChange(e.target.value)}
               placeholder="Enter image URL (https://...)"
-              className="w-full bg-primary-text border border-gray-600 rounded-md py-2 px-3 text-white 
-                                focus:outline-none focus:ring-2 focus:ring-pm-purple focus:border-pm-purple"
+              className="nf-input"
             />
             {customUrl && (
               <div className="flex justify-center">
                 <img
                   src={customUrl}
                   alt="Preview"
-                  className="max-h-40 rounded-lg object-contain"
+                  className="max-h-40 rounded-lg object-contain border border-nf-border"
                   onError={(e) => e.target.style.display = 'none'}
                 />
               </div>
@@ -274,9 +220,9 @@ const ThumbnailSelector = ({ value, onChange }) => {
       </div>
 
       {/* Preview Section */}
-      {previewSrc && mode !== 'upload' && (
-        <div className="bg-se-gray rounded-lg p-4">
-          <p className="text-sm text-gray-400 mb-2">Selected Thumbnail:</p>
+      {previewSrc && (
+        <div className="bg-nf-bg rounded-xl p-4 border border-nf-border">
+          <p className="text-sm text-nf-text-muted mb-3">Selected Thumbnail:</p>
           <div className="flex justify-center">
             <img
               src={previewSrc}

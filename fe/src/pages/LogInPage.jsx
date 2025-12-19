@@ -4,11 +4,12 @@ import { Link } from "react-router-dom";
 import { useUserStore } from "../stores/useUserStore";
 import { validateField, validateForm, hasErrors } from "../utils/validation";
 
-import { UserIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import OptimizedImage from '../components/OptimizedImage';
 
 const LogInPage = () => {
     const { login, loading } = useUserStore();
+    const [showPassword, setShowPassword] = useState(false);
 
     const [formData, setFormData] = useState({
         username: "",
@@ -40,7 +41,6 @@ const LogInPage = () => {
             [name]: value
         }));
 
-        // Clear error when user starts typing
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: "" }));
         }
@@ -49,121 +49,159 @@ const LogInPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Validate all fields in the form
         const formErrors = validateForm(formData);
         setErrors(formErrors);
         
-        // If no errors, proceed with login
         if (!hasErrors(formErrors)) {
             login(formData);
         }
     };
 
     return (
-        <div className="relative min-h-screen">
-            {/* Background image with overlay */}
-            <div className="fixed inset-0">
-                <div className="absolute inset-0 bg-gray-800 animate-pulse" />
-                    <OptimizedImage
-                        src="/assets/background.jpg"
-                        alt="Background"
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                    />
-                <div className="absolute inset-0 bg-black/80" />
+        <div className="nf-page relative min-h-screen flex items-center justify-center py-12 px-4">
+            {/* Background with gradient overlay */}
+            <div className="fixed inset-0 nf-hero-bg">
+                <OptimizedImage
+                    src="/assets/background.jpg"
+                    alt="Background"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                />
             </div>
 
-            <div className="relative z-20 pt-12 mx-auto max-w-sm sm:max-w-lg">
-                <div className="bg-pm-gray flex flex-col justify-center px-5 py-10 text-white rounded-lg">
-                    <div className="flex flex-col items-center gap-2 sm:mx-auto sm:w-full sm:max-w-sm">
-                        <h1 className="text-3xl font-bold tracking-tight">
-                            Welcome back!
+            {/* Login Card */}
+            <div className="relative z-10 w-full max-w-md">
+                <div className="nf-card-static p-8 sm:p-10">
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-nf-accent/10 mb-6">
+                            <svg className="w-8 h-8 text-nf-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                            </svg>
+                        </div>
+                        <h1 className="text-3xl font-bold text-nf-text mb-2">
+                            Welcome back
                         </h1>
-                        <p className="text-th-gray">
-                            Enter your information to log in.
+                        <p className="text-nf-text-secondary">
+                            Sign in to continue watching
                         </p>
                     </div>
 
-                    <div className="mt-5 sm:mx-auto sm:w-full sm:max-w-sm">
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            {/* Username */}
-                            <div>
-                                <label htmlFor="username" className="block text-sm/6 font-medium">
-                                    Username
-                                </label>
-                                <div className="relative mt-2 flex items-center gap-2">
-                                    <UserIcon className="absolute left-2 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        id="username"
-                                        name="username"
-                                        type="text"
-                                        value={formData.username}
-                                        required
-                                        onChange={handleChange}
-                                        onBlur={() => handleBlur("username")}
-                                        className={`block w-full rounded-md bg-white pl-8 pr-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-pm-purple sm:text-sm/6
-                                            ${touched.username && errors.username 
-                                                ? 'border-red-500 ring-red-300 focus:ring-red-500' 
-                                                : 'border-gray-300 ring-gray-300 focus:ring-primary-text'
-                                            }`
-                                        }
-                                    />
-                                </div>
-                                {touched.username && errors.username && (
-                                    <p className="mt-1 text-sm text-red-400">{errors.username}</p>
-                                )}
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        {/* Username */}
+                        <div>
+                            <label htmlFor="username" className="block text-sm font-medium text-nf-text mb-2">
+                                Username
+                            </label>
+                            <div className="relative">
+                                <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-nf-text-muted" />
+                                <input
+                                    id="username"
+                                    name="username"
+                                    type="text"
+                                    value={formData.username}
+                                    required
+                                    onChange={handleChange}
+                                    onBlur={() => handleBlur("username")}
+                                    placeholder="Enter your username"
+                                    className={`nf-input pl-11 ${
+                                        touched.username && errors.username 
+                                            ? 'border-nf-error focus:border-nf-error focus:shadow-none' 
+                                            : ''
+                                    }`}
+                                />
                             </div>
+                            {touched.username && errors.username && (
+                                <p className="mt-2 text-sm text-nf-error flex items-center gap-1">
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                    {errors.username}
+                                </p>
+                            )}
+                        </div>
 
-                            {/* Password */}
-                            <div>
-                                <label htmlFor="password" className="block text-sm/6 font-medium">
-                                    Password
-                                </label>
-                                <div className="mt-2 relative">
-                                    <LockClosedIcon className="absolute left-2 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        id="password"
-                                        name="password"
-                                        type="password"
-                                        value={formData.password}
-                                        required
-                                        autoComplete="current-password"
-                                        onChange={handleChange}
-                                        onBlur={() => handleBlur("password")}
-                                        className={`block w-full rounded-md bg-white pl-8 pr-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6
-                                            ${touched.password && errors.password 
-                                                ? 'border-red-500 ring-red-300 focus:ring-red-500' 
-                                                : 'border-gray-300 ring-gray-300 focus:ring-primary-text'
-                                            }`
-                                        }
-                                    />
-                                </div>
-                                {touched.password && errors.password && (
-                                    <p className="mt-1 text-sm text-red-400">{errors.password}</p>
-                                )}
-                            </div>
-
-                            {/* Log In Button */}
-                            <div>
+                        {/* Password */}
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-nf-text mb-2">
+                                Password
+                            </label>
+                            <div className="relative">
+                                <LockClosedIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-nf-text-muted" />
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={formData.password}
+                                    required
+                                    autoComplete="current-password"
+                                    onChange={handleChange}
+                                    onBlur={() => handleBlur("password")}
+                                    placeholder="Enter your password"
+                                    className={`nf-input pl-11 pr-11 ${
+                                        touched.password && errors.password 
+                                            ? 'border-nf-error focus:border-nf-error focus:shadow-none' 
+                                            : ''
+                                    }`}
+                                />
                                 <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className={`flex w-full justify-center rounded-md bg-pm-purple px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-pm-purple-hover transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 cursor-pointer
-                                        ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-nf-text-muted hover:text-nf-text transition-colors"
                                 >
-                                    {loading ? 'Logging in...' : 'Log in'}
+                                    {showPassword ? (
+                                        <EyeSlashIcon className="w-5 h-5" />
+                                    ) : (
+                                        <EyeIcon className="w-5 h-5" />
+                                    )}
                                 </button>
                             </div>
-                        </form>
+                            {touched.password && errors.password && (
+                                <p className="mt-2 text-sm text-nf-error flex items-center gap-1">
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                    {errors.password}
+                                </p>
+                            )}
+                        </div>
 
-                        <p className="mt-5 text-center text-sm/6 text-th-gray">
+                        {/* Submit Button */}
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className={`nf-btn nf-btn-primary w-full py-3 text-base ${
+                                loading ? 'opacity-60 cursor-not-allowed' : ''
+                            }`}
+                        >
+                            {loading ? (
+                                <span className="flex items-center gap-2">
+                                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                    </svg>
+                                    Signing in...
+                                </span>
+                            ) : (
+                                'Sign in'
+                            )}
+                        </button>
+                    </form>
+
+                    {/* Footer */}
+                    <div className="mt-8 text-center">
+                        <p className="text-nf-text-secondary text-sm">
                             Don't have an account?{' '}
-                            <Link to="/signup" className="font-semibold text-white hover:text-pm-purple-hover transition-colors">
-                                Sign up
+                            <Link to="/signup" className="nf-link font-semibold">
+                                Create one
                             </Link>
                         </p>
                     </div>
                 </div>
+
+                {/* Decorative glow */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-nf-accent/20 via-transparent to-nf-secondary/20 rounded-2xl blur-xl -z-10 opacity-50" />
             </div>
         </div>
     )

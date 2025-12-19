@@ -30,10 +30,10 @@ const App = () => {
 
     if (checkingAuth) return <LoadingSpinner />;    return (
         <LoadingBarProvider>
-            <div className="font-outfit">
+            <div className="bg-nf-bg min-h-screen">
                 <ScrollToTop />
 
-                <div className="bg-black sticky top-0 z-40">
+                <div className="bg-nf-bg/95 backdrop-blur-md sticky top-0 z-40 border-b border-nf-border/50">
                     <Navbar />
                 </div>
 
@@ -61,8 +61,11 @@ const App = () => {
 
 // Loading component
 const LoadingSpinner = () => (
-    <div className="h-screen w-screen flex items-center justify-center bg-black">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pm-purple"></div>
+    <div className="h-screen w-screen flex items-center justify-center bg-nf-bg">
+        <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nf-accent"></div>
+            <span className="text-nf-text-muted text-sm font-medium">Loading...</span>
+        </div>
     </div>
 );
 

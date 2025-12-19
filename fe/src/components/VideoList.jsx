@@ -7,8 +7,8 @@ import { useUserStore } from '../stores/useUserStore';
 import { useNavigateWithLoading } from '../hooks/useNavigateWithLoading';
 import { getImageSrc } from '../utils/imageUtils';
 
-import { TrashIcon } from '@heroicons/react/24/outline';
-import { StarIcon, PencilIcon } from '@heroicons/react/24/solid';
+import { TrashIcon, XMarkIcon, PlayIcon } from '@heroicons/react/24/outline';
+import { StarIcon, PencilIcon, FilmIcon } from '@heroicons/react/24/solid';
 import OptimizedImage from '../components/OptimizedImage';
 import ThumbnailSelector from '../components/ThumbnailSelector';
 import toast from 'react-hot-toast';
@@ -33,14 +33,12 @@ const VideoList = () => {
         fetchAllCategories();
     }, [fetchAllVideos, fetchAllCategories]);
 
-    // Filter videos to show only current user's videos
     const userVideos = videos.filter(video => video.uploaderId === user?.id);
 
     const handleDeleteVideo = async (videoId) => {
         try {
             await deleteVideo(videoId);
-            toast.success('Removed video');
-            // Refresh the video list after deletion
+            toast.success('Video removed');
             await fetchAllVideos();
         } catch (error) {
             toast.error('Failed to remove video');
@@ -67,7 +65,6 @@ const VideoList = () => {
             });
             toast.success('Video updated successfully');
             setEditingVideo(null);
-            // Refresh the video list after update
             await fetchAllVideos();
         } catch (error) {
             toast.error('Failed to update video');
@@ -76,64 +73,109 @@ const VideoList = () => {
 
     if (loading) {
         return (
-            <div className="bg-transparent text-white flex flex-col items-center justify-center gap-3">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
-                Loading videos...
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nf-accent"></div>
+                <span className="text-nf-text-muted">Loading your videos...</span>
             </div>
         );
     }
 
     return (
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-4xl mx-auto">
             {userVideos.length === 0 ? (
-                <p className="text-gray-400">No videos available!</p>
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="p-6 rounded-2xl bg-nf-surface mb-6">
+                        <FilmIcon className="w-16 h-16 text-nf-text-muted" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-nf-text mb-2">
+                        No videos yet
+                    </h2>
+                    <p className="text-nf-text-secondary">
+                        Create your first video to get started
+                    </p>
+                </div>
             ) : (
-                <div className="flex flex-col gap-3">
-                    {userVideos.map((item) => (
-                        <div key={item.id}>                            <div className="flex items-center justify-between px-5 py-2 rounded-lg bg-se-gray hover:bg-pm-purple-hover transition-colors">
-                            <div
-                                className="flex gap-3 cursor-pointer flex-1"
-                                onClick={() => navigateWithLoading(`/watch/${item.id}`)}
-                            >
-                                <OptimizedImage
-                                    src={getImageSrc(item.thumbnailUrl)}
-                                    alt={item.title}
-                                    className="max-w-32 aspect-[16/9] object-cover rounded-lg"
-                                />                                    <div className="flex flex-col justify-center">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <span className="text-xl text-white font-semibold line-clamp-2">{item.title}</span>
-                                        <span className="px-3 text-white bg-pm-purple rounded-full text-sm whitespace-nowrap">{item.categoryName}</span>
-                                    </div>                                        <div className="flex items-center gap-4 text-sm text-gray-400">
-                                        <span className="flex items-center gap-2">
-                                            <StarIcon className="w-3" />
-                                            {item.averageRating ? Number(item.averageRating).toFixed(1) : 'N/A'}
-                                        </span>
-                                        <span>{item.viewCount} views</span>
+                <div className="space-y-4">
+                    {userVideos.map((item, index) => (
+                        <div 
+                            key={item.id}
+                            className="animate-fade-in"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                            {/* Video Card */}
+                            <div className="group nf-card-static p-4 flex items-center gap-4 hover:border-nf-border-hover transition-all duration-200">
+                                {/* Thumbnail */}
+                                <div 
+                                    className="relative flex-shrink-0 w-36 aspect-video rounded-lg overflow-hidden cursor-pointer"
+                                    onClick={() => navigateWithLoading(`/watch/${item.id}`)}
+                                >
+                                    <OptimizedImage
+                                        src={getImageSrc(item.thumbnailUrl)}
+                                        alt={item.title}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-nf-bg/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <PlayIcon className="w-8 h-8 text-nf-accent" />
                                     </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-3 text-white">
-                                <button
-                                    onClick={() => handleEditClick(item)}
-                                    className="p-2 hover:bg-pm-purple rounded-full transition-colors cursor-pointer"
+
+                                {/* Info */}
+                                <div 
+                                    className="flex-1 min-w-0 cursor-pointer" 
+                                    onClick={() => navigateWithLoading(`/watch/${item.id}`)}
                                 >
-                                    <PencilIcon className="w-5" />
-                                </button>
-                                <button
-                                    onClick={() => handleDeleteVideo(item.id)}
-                                    className="p-2 hover:bg-red-400 rounded-full transition-colors cursor-pointer"
-                                >
-                                    <TrashIcon className="w-5" />
-                                </button>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <h3 className="text-lg font-semibold text-nf-text line-clamp-1 group-hover:text-nf-accent transition-colors">
+                                            {item.title}
+                                        </h3>
+                                        <span className="nf-tag text-xs py-1 px-2">
+                                            {item.categoryName}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-4 text-sm text-nf-text-muted">
+                                        <span className="flex items-center gap-1.5">
+                                            <StarIcon className="w-4 h-4 text-nf-accent" />
+                                            {item.averageRating ? Number(item.averageRating).toFixed(1) : 'N/A'}
+                                        </span>
+                                        <span>{item.viewCount?.toLocaleString() || 0} views</span>
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handleEditClick(item)}
+                                        className="p-2.5 rounded-lg text-nf-text-muted hover:text-nf-secondary hover:bg-nf-secondary/10 transition-all duration-200 cursor-pointer"
+                                        title="Edit video"
+                                    >
+                                        <PencilIcon className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteVideo(item.id)}
+                                        className="p-2.5 rounded-lg text-nf-text-muted hover:text-nf-error hover:bg-nf-error/10 transition-all duration-200 cursor-pointer"
+                                        title="Delete video"
+                                    >
+                                        <TrashIcon className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
 
                             {/* Edit Form */}
                             {editingVideo === item.id && (
-                                <div className="mt-2 bg-pm-gray p-4 rounded-lg">
+                                <div className="mt-2 nf-card-static p-6 animate-fade-in">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-lg font-semibold text-nf-text">Edit Video</h3>
+                                        <button
+                                            onClick={() => setEditingVideo(null)}
+                                            className="p-2 rounded-lg text-nf-text-muted hover:text-nf-text hover:bg-nf-surface-hover transition-colors cursor-pointer"
+                                        >
+                                            <XMarkIcon className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                    
                                     <form onSubmit={handleEditSubmit} className="space-y-4">
                                         <div>
-                                            <label htmlFor="title" className="block text-sm font-medium text-white">
+                                            <label htmlFor="title" className="block text-sm font-medium text-nf-text mb-2">
                                                 Title
                                             </label>
                                             <input
@@ -141,13 +183,13 @@ const VideoList = () => {
                                                 id="title"
                                                 value={editedVideo.title}
                                                 onChange={(e) => setEditedVideo({ ...editedVideo, title: e.target.value })}
-                                                className="mt-1 block w-full bg-primary-text border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-brown-500 focus:border-brown-500"
+                                                className="nf-input"
                                                 required
                                             />
                                         </div>
 
                                         <div>
-                                            <label htmlFor="description" className="block text-sm font-medium text-white">
+                                            <label htmlFor="description" className="block text-sm font-medium text-nf-text mb-2">
                                                 Description
                                             </label>
                                             <textarea
@@ -155,27 +197,27 @@ const VideoList = () => {
                                                 value={editedVideo.description}
                                                 onChange={(e) => setEditedVideo({ ...editedVideo, description: e.target.value })}
                                                 rows="3"
-                                                className="mt-1 block w-full bg-primary-text border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-brown-500 focus:border-brown-500"
+                                                className="nf-input resize-none"
                                                 required
                                             />
                                         </div>
 
                                         <div>
-                                            <label htmlFor="url" className="block text-sm font-medium text-white">
-                                                URL
+                                            <label htmlFor="url" className="block text-sm font-medium text-nf-text mb-2">
+                                                Video URL
                                             </label>
                                             <input
                                                 type="text"
                                                 id="url"
                                                 value={editedVideo.url}
                                                 onChange={(e) => setEditedVideo({ ...editedVideo, url: e.target.value })}
-                                                className="mt-1 block w-full bg-primary-text border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-brown-500 focus:border-brown-500"
+                                                className="nf-input"
                                                 required
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-white mb-2">
+                                            <label className="block text-sm font-medium text-nf-text mb-2">
                                                 Thumbnail
                                             </label>
                                             <ThumbnailSelector
@@ -185,36 +227,36 @@ const VideoList = () => {
                                         </div>
 
                                         <div>
-                                            <label htmlFor="category" className="block text-sm font-medium text-white">
+                                            <label htmlFor="category" className="block text-sm font-medium text-nf-text mb-2">
                                                 Category
                                             </label>
                                             <select
                                                 id="category"
                                                 value={editedVideo.categoryId}
                                                 onChange={(e) => setEditedVideo({ ...editedVideo, categoryId: Number(e.target.value) })}
-                                                className="mt-1 block w-full bg-pm-gray border border-gray rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-pm-purple-hover focus:border-pm-purple-hover"
+                                                className="nf-input cursor-pointer"
                                                 required
                                             >
-                                                <option value="">Select a category</option>
+                                                <option value="" className="bg-nf-surface">Select a category</option>
                                                 {categories.map((category) => (
-                                                    <option key={category.id} value={category.id}>
+                                                    <option key={category.id} value={category.id} className="bg-nf-surface">
                                                         {category.name}
                                                     </option>
                                                 ))}
                                             </select>
                                         </div>
 
-                                        <div className="flex justify-end gap-2">
+                                        <div className="flex justify-end gap-3 pt-2">
                                             <button
                                                 type="button"
                                                 onClick={() => setEditingVideo(null)}
-                                                className="px-4 py-2 border border-gray-600 rounded-md text-white hover:bg-pm-purple-hover transition-colors cursor-pointer"
+                                                className="nf-btn nf-btn-ghost"
                                             >
                                                 Cancel
                                             </button>
                                             <button
                                                 type="submit"
-                                                className="px-4 py-2 bg-pm-purple text-white rounded-md hover:bg-pm-purple-hover transition-colors cursor-pointer"
+                                                className="nf-btn nf-btn-primary"
                                             >
                                                 Save Changes
                                             </button>
