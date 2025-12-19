@@ -1,0 +1,1645 @@
+{
+  "info": {
+    "_postman_id": "e67c8d3c-1d1e-4a2b-bd30-fcda458265ec",
+    "name": "HCMIU Web Project API",
+    "description": "API collection for the HCMIU Web Development Project",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Authentication endpoints for user login and registration",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"user1\",\n    \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "signin"]
+            },            "description": "Authenticate a user and receive a JWT token"
+          },
+          "response": [
+            {
+              "name": "Successful Login",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"username\": \"user1\",\n    \"password\": \"password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/signin",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "auth", "signin"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n    \"token\": null,\n    \"id\": 4,\n    \"username\": \"user1\",\n    \"email\": \"user1@example.com\",\n    \"avatar\": \"/resources/static/images/avatars/user1-avatar.jpg\",\n    \"roles\": [\"ROLE_USER\"]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"newuser\",\n    \"email\": \"newuser@example.com\",\n    \"password\": \"password123\",\n    \"avatar\": \"\",\n    \"role\": [\"ROLE_USER\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "signup"]
+            },
+            "description": "Register a new user"
+          },
+          "response": []
+        },
+        {
+          "name": "Request Email OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/request-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "request-otp"]
+            },
+            "description": "Request a one-time password to be sent to the user's email"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\",\n    \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verify-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "verify-otp"]
+            },
+            "description": "Verify the OTP sent to the user's email"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password-request",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "reset-password-request"]
+            },
+            "description": "Request a password reset email with OTP"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\",\n    \"otp\": \"123456\",\n    \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "reset-password"]
+            },
+            "description": "Reset user's password using the OTP sent to their email"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Logout the current user"
+          },
+          "response": []
+        }      ]
+    },
+    {
+      "name": "Email Verification",
+      "description": "Endpoints for email verification processes",
+      "item": [
+        {
+          "name": "Send Verification Email",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/email/send-verification",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "email", "send-verification"]
+            },
+            "description": "Send a verification email to the currently logged in user"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/email/verify?token=verification_token_here",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "email", "verify"],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "verification_token_here"
+                }
+              ]
+            },
+            "description": "Verify a user's email with the token sent in the verification email"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Verification Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/email/verification-status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "email", "verification-status"]
+            },
+            "description": "Check if the current user's email is verified"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "Endpoints for user management",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            },
+            "description": "Get all users"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/users/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "1"]
+            },
+            "description": "Get a user by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by Email",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/users/email/user@example.com",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "email", "user@example.com"]
+            },
+            "description": "Get a user by email"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Videos",
+      "description": "Endpoints for video management",
+      "item": [
+        {
+          "name": "Get All Videos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/videos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "videos"]
+            },
+            "description": "Get all videos"
+          },
+          "response": []
+        },        {
+          "name": "Get Video by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/videos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "videos", "1"]
+            },
+            "description": "Get a video by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Videos by Title",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/videos/search?title=sample",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "videos", "search"],
+              "query": [
+                {
+                  "key": "title",
+                  "value": "sample"
+                }
+              ]
+            },
+            "description": "Search for videos by title"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Video",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"New Video\",\n    \"description\": \"This is a new video\",\n    \"url\": \"https://example.com/video.mp4\",\n    \"thumbnailUrl\": \"https://example.com/thumbnail.jpg\",\n    \"userId\": 1,\n    \"categoryId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/videos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "videos"]
+            },            "description": "Create a new video"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Video",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Updated Video Title\",\n    \"description\": \"Updated video description\",\n    \"url\": \"https://example.com/updated-video.mp4\",\n    \"thumbnailUrl\": \"https://example.com/updated-thumbnail.jpg\",\n    \"categoryId\": 2,\n    \"duration\": 120\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/videos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "videos", "1"]
+            },            "description": "Update an existing video. Only the video owner or admin can update a video."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Video",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/videos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "videos", "1"]
+            },
+            "description": "Delete an existing video. Only the video owner or admin can delete a video."
+          },
+          "response": []
+        },{
+          "name": "View Video",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/videos/1/view",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "videos", "1", "view"]
+            },
+            "description": "Increment the view count for a video"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Similar Videos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/videos/1/similar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "videos", "1", "similar"]
+            },
+            "description": "Get videos similar to the specified video based on title similarity"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "description": "Endpoints for comment management",
+      "item": [
+        {
+          "name": "Get All Comments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comments"]
+            },
+            "description": "Get all comments"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Comments by Video ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/comments/video/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comments", "video", "1"]
+            },
+            "description": "Get comments for a specific video"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Comments by User ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/comments/user/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comments", "user", "1"]
+            },
+            "description": "Get comments by a specific user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Comment by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/comments/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comments", "1"]
+            },
+            "description": "Get a specific comment by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Comment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"content\": \"This is my comment\",\n    \"userId\": 1,\n    \"videoId\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comments"]
+            },
+            "description": "Add a comment to a video. Note: The userId will be overridden with the authenticated user's ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Comment as Different User (Will Fail)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"content\": \"This is my comment\",\n    \"userId\": 2,\n    \"videoId\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comments"]
+            },
+            "description": "Try to comment as a different user (will be rejected with a 403 Forbidden error)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Reply to Comment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"content\": \"This is my reply to the comment\",\n    \"userId\": 1,\n    \"videoId\": 3,\n    \"parentCommentId\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comments"]
+            },
+            "description": "Reply to an existing comment. Replace parentCommentId with an actual comment ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/comments/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comments", "1"]
+            },
+            "description": "Delete a comment. Only the comment author or the video uploader can delete a comment"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "description": "Endpoints for notification management",
+      "item": [
+        {
+          "name": "Get User Notifications",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/user/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "user", "1"]
+            },
+            "description": "Get notifications for a user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Unread Notifications",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/user/1/unread",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "user", "1", "unread"]
+            },
+            "description": "Get unread notifications for a user"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Notification",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"recipientId\": 1,\n    \"type\": \"COMMENT\",\n    \"message\": \"Someone commented on your video\",\n    \"link\": \"/watch/1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications"]
+            },
+            "description": "Create a notification"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/1/mark-read",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "1", "mark-read"]
+            },
+            "description": "Mark a notification as read"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Playlists",
+      "description": "Endpoints for playlist management",
+      "item": [
+        {
+          "name": "Get Public Playlists",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/playlists",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "playlists"]
+            },
+            "description": "Get all public playlists"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User's Playlists",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/playlists/user/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "playlists", "user", "1"]
+            },
+            "description": "Get playlists for a specific user"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Playlist",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"My Playlist\",\n    \"description\": \"A collection of my favorite videos\",\n    \"userId\": 1,\n    \"isPublic\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/playlists",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "playlists"]
+            },
+            "description": "Create a new playlist"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "description": "Endpoints for subscription management",
+      "item": [
+        {
+          "name": "Get User's Subscriptions",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/subscriptions/subscriber/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subscriptions", "subscriber", "1"]
+            },
+            "description": "Get channels a user is subscribed to"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Creator's Subscribers",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/subscriptions/creator/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subscriptions", "creator", "1"]
+            },
+            "description": "Get subscribers for a creator"
+          },
+          "response": []
+        },
+        {
+          "name": "Subscribe to Creator",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"subscriberId\": 1,\n    \"creatorId\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/subscriptions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subscriptions"]
+            },
+            "description": "Subscribe to a creator"
+          },
+          "response": []
+        },
+        {
+          "name": "Unsubscribe from Creator",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/subscriptions/1/2",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subscriptions", "1", "2"]
+            },
+            "description": "Unsubscribe from a creator (subscriberId/creatorId)"
+          },
+          "response": []        }
+      ]
+    },
+    {
+      "name": "Watchlist",
+      "description": "Endpoints for watchlist management",
+      "item": [
+        {
+          "name": "Get User's Watchlist",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/user/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", "user", "1"]
+            },
+            "description": "Get watchlist for a specific user"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Video to Watchlist",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/add/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", "add", "1"]
+            },
+            "description": "Add a video to user's watchlist"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Video from Watchlist",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/remove/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", "remove", "1"]
+            },
+            "description": "Remove a video from user's watchlist"
+          },
+          "response": []
+        },
+        {
+          "name": "Clear Watchlist",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/clear",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", "clear"]
+            },
+            "description": "Clear all videos from user's watchlist"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Video in Watchlist",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/check/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", "check", "1"]
+            },
+            "description": "Check if a video is in the user's watchlist"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tags",
+      "description": "Endpoints for tag management",
+      "item": [
+        {
+          "name": "Get All Tags",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tags",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tags"]
+            },
+            "description": "Get all tags"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tag by Name",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tags/name/gaming",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tags", "name", "gaming"]
+            },
+            "description": "Get a tag by name"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Tag",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"programming\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tags",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tags"]
+            },
+            "description": "Create a new tag"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Video Tags",
+      "description": "Endpoints for managing tags on videos",
+      "item": [
+        {
+          "name": "Get Tags for Video",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/video-tags/video/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "video-tags", "video", "1"]
+            },
+            "description": "Get all tags for a specific video"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Videos by Tag",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/video-tags/tag/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "video-tags", "tag", "1"]
+            },
+            "description": "Get all videos for a specific tag"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Tag to Video",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"videoId\": 1,\n    \"tagName\": \"programming\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/video-tags",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "video-tags"]
+            },
+            "description": "Add a tag to a video"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Tag from Video",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/video-tags/1/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "video-tags", "1", "1"]
+            },
+            "description": "Remove a tag from a video (videoId/tagId)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "description": "Endpoints for category management",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            },
+            "description": "Get all categories"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Category by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories", "1"]
+            },
+            "description": "Get a category by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"New Category\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            },
+            "description": "Create a new category"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ratings",
+      "description": "Endpoints for video ratings management",
+      "item": [
+        {
+          "name": "Rate a Video",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"videoId\": 1,\n    \"userId\": 1,\n    \"isLike\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ratings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ratings"]
+            },
+            "description": "Rate a video (like or dislike)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Rating Counts for Video",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/ratings/video/1/counts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ratings", "video", "1", "counts"]
+            },
+            "description": "Get like and dislike counts for a video"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User's Rating for Video",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/ratings/user/1/video/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ratings", "user", "1", "video", "1"]
+            },
+            "description": "Get a user's rating for a specific video"
+          },
+          "response": []
+        }
+      ]
+    },    {
+      "name": "Comment Ratings",
+      "description": "Endpoints for comment ratings management",
+      "item": [
+        {
+          "name": "Rate a Comment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"commentId\": 1,\n    \"userId\": null,\n    \"rating\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/comment-ratings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comment-ratings"]
+            },
+            "description": "Rate a comment (1 for like, -1 for dislike). The userId will be automatically set to the authenticated user's ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Comment Rating Counts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/comment-ratings/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comment-ratings", "1"]
+            },
+            "description": "Get like and dislike counts for a comment, and the current user's rating if authenticated"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Comment Rating",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/comment-ratings/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comment-ratings", "1"]
+            },
+            "description": "Delete a user's rating for a specific comment. The user ID is determined from the authenticated user."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "description": "Endpoints for role management",
+      "item": [
+        {
+          "name": "Get All Roles",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"]
+            },
+            "description": "Get all roles (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Role by Name",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/name/ROLE_USER",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "name", "ROLE_USER"]
+            },
+            "description": "Get a role by name (admin only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "File Uploads",
+      "description": "Endpoints for file uploads including avatar images",
+      "item": [
+        {
+          "name": "Upload Avatar (Current User)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/uploads/avatar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "uploads", "avatar"]
+            },
+            "description": "Upload avatar image for the currently authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Avatar (Specific User)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/uploads/avatar/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "uploads", "avatar", "1"]
+            },
+            "description": "Upload avatar image for a specific user (admin only, or the user themselves)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Test",
+      "description": "Test endpoints",
+      "item": [
+        {
+          "name": "Test Backend",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "test"]
+            },
+            "description": "Test if backend is working"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.response.code === 200 && pm.response.headers.get('Content-Type') && pm.response.headers.get('Content-Type').includes('application/json')) {",
+          "    try {",
+          "        const responseData = pm.response.json();",
+          "        if (responseData && responseData.token) {",
+          "            pm.environment.set('jwt_token', responseData.token);",
+          "            console.log('JWT token saved to environment variable');",
+          "        }",
+          "    } catch (e) {",
+          "        console.error('Could not parse JSON response');",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ]
+}
