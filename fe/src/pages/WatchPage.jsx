@@ -569,7 +569,7 @@ const WatchPage = () => {
                         {videoComments.map((comment) => (
                             <div key={comment.id} className="mb-2 flex gap-5 text-white">
                                 <OptimizedImage
-                                    src={comment.avatar || "../assets/avatar.png"}
+                                    src={comment.userAvatarUrl || "/assets/avatar.png"}
                                     alt={comment.username}
                                     className="h-12 w-12 object-cover rounded-full"
                                 />
@@ -697,7 +697,7 @@ const WatchPage = () => {
                                                 return (
                                                     <div key={reply.id} className="py-1 flex gap-5">
                                                         <OptimizedImage
-                                                            src={reply.avatar || "../assets/avatar.png"}
+                                                            src={reply.userAvatarUrl || "/assets/avatar.png"}
                                                             alt={reply.username}
                                                             className="h-12 w-12 object-cover rounded-full"
                                                         />
