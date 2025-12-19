@@ -303,8 +303,11 @@ const WatchPage = () => {
             // Set the source again after a brief delay
             setTimeout(() => {
                 if (videoRef.current && video?.url) {
-                    // Try the most likely working path first
-                    videoRef.current.src = `/videos/${video.url}`;
+                    // Use the URL directly if it starts with http or /, otherwise add /videos/ prefix
+                    const videoSrc = video.url.startsWith('http') || video.url.startsWith('/')
+                        ? video.url
+                        : `/videos/${video.url}`;
+                    videoRef.current.src = videoSrc;
                     videoRef.current.load();
                 }
             }, 100);
@@ -411,7 +414,7 @@ const WatchPage = () => {
                                         onCanPlay={handleVideoCanPlay}
                                         onError={handleVideoError}
                                         key={`video-${video.id}-${video.url}`}
-                                        src={video.url.startsWith('http') ? video.url : `/videos/${video.url}`}
+                                        src={video.url.startsWith('http') || video.url.startsWith('/') ? video.url : `/videos/${video.url}`}
                                     >
                                         Your browser does not support the video tag.
                                     </video>
