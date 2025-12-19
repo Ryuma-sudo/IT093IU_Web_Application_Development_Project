@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from "react-router-dom";
 import toast from 'react-hot-toast';
 import axios from "../config/axios";
@@ -10,82 +10,73 @@ import { useWatchListStore } from '../stores/useWatchListStore'
 import { useCommentInteractionStore } from '../stores/useCommentInteractionStore'
 
 import useVideoVolume from '../hooks/useVideoVolume';
-import { checkVideoExists, getVideoSourcePaths, formatVideoDuration } from '../utils/videoUtils';
+import { checkVideoExists } from '../utils/videoUtils';
+import { getImageSrc } from '../utils/imageUtils';
+import { useNavigateWithLoading } from '../hooks/useNavigateWithLoading';
 
-import Sidebar from '../components/Sidebar';
 import OptimizedImage from '../components/OptimizedImage';
-import { StarIcon, ChevronUpIcon, ChevronDownIcon, TrashIcon } from '@heroicons/react/24/solid';
-import { BookmarkIcon, HandThumbUpIcon, HandThumbDownIcon, FaceSmileIcon } from '@heroicons/react/24/outline';
+import { 
+    StarIcon, 
+    ChevronUpIcon, 
+    ChevronDownIcon, 
+    EyeIcon,
+    ClockIcon,
+    PlayIcon
+} from '@heroicons/react/24/solid';
+import { 
+    BookmarkIcon, 
+    HandThumbUpIcon, 
+    HandThumbDownIcon, 
+    ChatBubbleLeftIcon,
+    ShareIcon,
+    TrashIcon
+} from '@heroicons/react/24/outline';
 
 import { formatDate } from "../config/format";
 
-// import { Picker } from 'emoji-mart';
-// import 'emoji-mart/css/emoji-mart.css';
-
 const WatchPage = () => {
-    const { id } = useParams(); // Get video ID from URL
-
-    // Use the custom video volume hook with 50% default volume
-    const { videoRef, setDefaultVolume } = useVideoVolume(0.5); const { user } = useUserStore();
-    const { video, loading, fetchVideo } = useVideoStore();
+    const { id } = useParams();
+    const navigateWithLoading = useNavigateWithLoading();
+    const { videoRef, setDefaultVolume } = useVideoVolume(0.5);
+    
+    const { user } = useUserStore();
+    const { video, videos, loading, fetchVideo, fetchAllVideos } = useVideoStore();
     const { videoComments, loadingComment, createComment, fetchCommentByVideo, deleteComment, createReply } = useCommentStore();
-
     const { addToWatchList, removeFromWatchList, isInWatchList } = useWatchListStore();
     const { likeComment, dislikeComment, removeLike, removeDislike } = useCommentInteractionStore();
 
-    const [isVideoVisible, setIsVideoVisible] = useState(false);
-    const [userRating, setUserRating] = useState(1);
-    const [isFocusedComment, setIsFocusedComment] = useState(false);
-    const [isFocusedReply, setIsFocusedReply] = useState(false);
-    const [newComment, setNewComment] = useState('')
-    const [newReply, setNewReply] = useState('')
-    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    // State
+    const [userRating, setUserRating] = useState(5);
+    const [newComment, setNewComment] = useState('');
+    const [newReply, setNewReply] = useState('');
+    const [showDescription, setShowDescription] = useState(false);
     const [toggleReplies, setToggleReplies] = useState(null);
     const [replyToComment, setReplyToComment] = useState(null);
     const [isInWatchListState, setIsInWatchListState] = useState(false);
     const [videoError, setVideoError] = useState(false);
     const [videoLoaded, setVideoLoaded] = useState(false);
-    const [videoBuffering, setVideoBuffering] = useState(false);
-    const [loadingProgress, setLoadingProgress] = useState(0);
-    const [videoReadyState, setVideoReadyState] = useState(0);
-    const [preloadStarted, setPreloadStarted] = useState(false);
+    const [showRatingDropdown, setShowRatingDropdown] = useState(false);
 
+    // Fetch video and comments
     useEffect(() => {
-        // Reset all video states when video ID changes
         setVideoError(false);
         setVideoLoaded(false);
-
-        // Fetch the video data
-        const loadVideo = async () => {
-            try {
-                console.log('Fetching video with ID:', id);
-                await fetchVideo(id);
-            } catch (error) {
-                console.error('Error fetching video:', error);
-                toast.error('Failed to load video data');
-            }
-        };
-
         if (id) {
-            loadVideo();
+            fetchVideo(id);
+            fetchAllVideos();
         }
-    }, [id, fetchVideo]);
+    }, [id, fetchVideo, fetchAllVideos]);
 
-    // Separate effect to handle video element updates when video data changes
+    useEffect(() => {
+        fetchCommentByVideo(id);
+    }, [id, fetchCommentByVideo]);
+
     useEffect(() => {
         if (video && videoRef.current) {
-            console.log('Video data loaded:', video);
-            // Reset loading states when new video data is available
-            setVideoError(false);
-            setVideoLoaded(false);
-
-            // Validate video path before loading
             const validateAndLoadVideo = async () => {
                 try {
                     const validation = await checkVideoExists(video.url);
                     if (validation.exists) {
-                        console.log('Video file found, loading...');
-                        // Force video element to reload with verified path
                         setTimeout(() => {
                             if (videoRef.current) {
                                 videoRef.current.src = validation.path;
@@ -93,225 +84,72 @@ const WatchPage = () => {
                             }
                         }, 100);
                     } else {
-                        console.error('Video file not found:', video.url);
                         setVideoError(true);
-                        toast.error('Video file not found. Please contact support.');
                     }
                 } catch (error) {
-                    console.error('Error validating video:', error);
-                    // Fallback to normal loading if validation fails
                     setTimeout(() => {
-                        if (videoRef.current) {
-                            videoRef.current.load();
-                        }
+                        if (videoRef.current) videoRef.current.load();
                     }, 100);
                 }
             };
-
             validateAndLoadVideo();
         }
-    }, [video]);
-
-    useEffect(() => {
-        fetchCommentByVideo(id);
-    }, [id, fetchCommentByVideo]);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                setIsVideoVisible(entry.isIntersecting);
-            },
-            {
-                root: null,
-                rootMargin: '50px',
-                threshold: 0.1
-            }
-        );
-
-        if (videoRef.current) {
-            observer.observe(videoRef.current);
-        }
-
-        return () => {
-            if (videoRef.current) {
-                observer.unobserve(videoRef.current);
-            }
-        };
-    }, []);
+    }, [video, videoRef]);
 
     useEffect(() => {
         if (video && user) {
             setIsInWatchListState(isInWatchList(video.id));
         }
-    }, [video, user, isInWatchList]); const handleSubmitRating = async (e) => {
-        e.preventDefault();
-        try {
-            await axios.post("/ratings", { videoId: video.id, userId: user.id, rating: parseInt(userRating) });
-            toast.success("Rating submitted!");
+    }, [video, user, isInWatchList]);
 
-            // Refresh video data to update rating display instead of reloading the page
+    // Handlers
+    const handleSubmitRating = async (rating) => {
+        try {
+            await axios.post("/ratings", { videoId: video.id, userId: user.id, rating: parseInt(rating) });
+            toast.success(`Rated ${rating} stars!`);
+            setShowRatingDropdown(false);
             await fetchVideo(id);
         } catch (err) {
-            console.error('Error rating video: ' + err);
-            toast.error('Could not rate video. Please try again.');
+            toast.error('Could not rate video.');
         }
     };
 
-    const handleEmojiSelect = (emoji) => {
-        setNewComment((prev) => prev + emoji.native);
-    };
-
-    const handleCancel = () => {
-        setNewComment('');
-        setShowEmojiPicker(false);
-        setIsFocusedComment(false);
-        setIsFocusedReply(false);
-        setReplyToComment(null);
-    }; const handleSubmitComment = async (e) => {
+    const handleSubmitComment = async (e) => {
         e.preventDefault();
+        if (!newComment.trim()) return;
         try {
             await createComment({ content: newComment, userId: user.id, videoId: video.id });
-            toast.success('Comment posted successfully!');
+            toast.success('Comment posted!');
             setNewComment('');
-            setShowEmojiPicker(false);
-            setIsFocusedComment(false);
-
-            // Refresh comments data instead of reloading the page
             await fetchCommentByVideo(id);
         } catch (err) {
-            console.error('Error posting new comment: ' + err);
-            toast.error('Could not post comment. Please try again.');
+            toast.error('Could not post comment.');
         }
-    }
+    };
 
     const handleDeleteComment = async (commentId) => {
         try {
             await deleteComment(commentId);
-            toast.success('Comment deleted successfully!');
-
-            // Refresh comments data instead of reloading the page
+            toast.success('Comment deleted!');
             await fetchCommentByVideo(id);
         } catch (err) {
-            console.error('Error deleting comment: ' + err);
-            toast.error('Could not delete comment. Please try again.');
+            toast.error('Could not delete comment.');
         }
-    }
+    };
 
     const handleSubmitReply = async (e, commentId) => {
         e.preventDefault();
+        if (!newReply.trim()) return;
         try {
             await createReply({ content: newReply, userId: user.id, videoId: video.id, parentCommentId: commentId });
-            toast.success('Reply posted successfully!');
+            toast.success('Reply posted!');
             setNewReply('');
-            setShowEmojiPicker(false);
-            setIsFocusedReply(false);
             setReplyToComment(null);
-
-            // Refresh comments data instead of reloading the page
             await fetchCommentByVideo(id);
         } catch (err) {
-            console.error('Error posting new reply: ' + err);
-            toast.error('Could not post reply. Please try again.');
-        }
-    }
-
-    const handleVideoPlay = () => {
-        // Implementation of handleVideoPlay function
-    };
-
-    // Video event handlers with improved error handling and loading management
-    const handleVideoLoad = () => {
-        console.log('Video loaded successfully');
-        setVideoLoaded(true);
-        setVideoError(false);
-        setVideoBuffering(false);
-        setLoadingProgress(100);
-    };
-
-    const handleVideoError = (e) => {
-        console.error('Video loading error:', e);
-        console.error('Error details:', {
-            error: e.target.error,
-            networkState: e.target.networkState,
-            readyState: e.target.readyState,
-            currentSrc: e.target.currentSrc
-        });
-        setVideoError(true);
-        setVideoLoaded(false);
-        setVideoBuffering(false);
-        setLoadingProgress(0);
-        // Don't show toast immediately, wait for user interaction
-    };
-
-    const handleVideoCanPlay = () => {
-        console.log('Video can play');
-        setVideoLoaded(true);
-        setVideoError(false);
-        setVideoBuffering(false);
-        setLoadingProgress(90);
-    };
-
-    const handleVideoLoadStart = () => {
-        console.log('Video load started');
-        setVideoLoaded(false);
-        setVideoError(false);
-        setVideoBuffering(true);
-        setLoadingProgress(10);
-    };
-
-    const handleVideoLoadedMetadata = () => {
-        console.log('Video metadata loaded');
-        setLoadingProgress(30);
-        setDefaultVolume();
-    };
-
-    const handleVideoProgress = () => {
-        if (videoRef.current) {
-            const buffered = videoRef.current.buffered;
-            const duration = videoRef.current.duration;
-
-            if (buffered.length > 0 && duration > 0) {
-                const bufferedEnd = buffered.end(buffered.length - 1);
-                const progress = Math.min((bufferedEnd / duration) * 100, 100);
-                setLoadingProgress(Math.max(progress, 40)); // Minimum 40% when buffering starts
-            }
+            toast.error('Could not post reply.');
         }
     };
-
-    const handleVideoWaiting = () => {
-        console.log('Video buffering...');
-        setVideoBuffering(true);
-    };
-
-    const handleVideoPlaying = () => {
-        console.log('Video playing');
-        setVideoBuffering(false);
-        setVideoLoaded(true);
-    };
-
-    const retryVideoLoad = () => {
-        console.log('Retrying video load');
-        setVideoError(false);
-        setVideoLoaded(false);
-        setVideoBuffering(true);
-        setLoadingProgress(0);
-
-        if (videoRef.current) {
-            // Clear the video source first
-            videoRef.current.src = '';
-            videoRef.current.load();
-            // Set the source again after a brief delay
-            setTimeout(() => {
-                if (videoRef.current && video?.url) {
-                    // Try the most likely working path first
-                    videoRef.current.src = `/videos/${video.url}`;
-                    videoRef.current.load();
-                }
-            }, 100);
-        }
-        toast('Retrying video load...');
-    };
-    console.log(user)
 
     const handleWatchListToggle = async () => {
         try {
@@ -324,7 +162,7 @@ const WatchPage = () => {
             }
             setIsInWatchListState(!isInWatchListState);
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to update watch list');
+            toast.error('Failed to update watch list');
         }
     };
 
@@ -333,13 +171,9 @@ const WatchPage = () => {
             const comment = videoComments.find(c => c.id === commentId);
             if (comment.likedByUser) {
                 await removeLike(commentId, user.id);
-                toast.success('Removed like');
             } else {
-                if (comment.dislikedByUser) {
-                    await removeDislike(commentId, user.id);
-                }
+                if (comment.dislikedByUser) await removeDislike(commentId, user.id);
                 await likeComment(commentId, user.id);
-                toast.success('Liked comment');
             }
             fetchCommentByVideo(id);
         } catch (error) {
@@ -352,13 +186,9 @@ const WatchPage = () => {
             const comment = videoComments.find(c => c.id === commentId);
             if (comment.dislikedByUser) {
                 await removeDislike(commentId, user.id);
-                toast.success('Removed dislike');
             } else {
-                if (comment.likedByUser) {
-                    await removeLike(commentId, user.id);
-                }
+                if (comment.likedByUser) await removeLike(commentId, user.id);
                 await dislikeComment(commentId, user.id);
-                toast.success('Disliked comment');
             }
             fetchCommentByVideo(id);
         } catch (error) {
@@ -366,421 +196,430 @@ const WatchPage = () => {
         }
     };
 
+    const handleVideoLoad = () => {
+        setVideoLoaded(true);
+        setVideoError(false);
+    };
+
+    const handleVideoError = () => {
+        setVideoError(true);
+        setVideoLoaded(false);
+    };
+
+    const retryVideoLoad = () => {
+        setVideoError(false);
+        setVideoLoaded(false);
+        if (videoRef.current && video?.url) {
+            videoRef.current.src = `/videos/${video.url}`;
+            videoRef.current.load();
+        }
+    };
+
+    const handleShare = () => {
+        navigator.clipboard.writeText(window.location.href);
+        toast.success('Link copied to clipboard!');
+    };
+
+    // Get related videos (exclude current)
+    const relatedVideos = videos.filter(v => v.id !== parseInt(id)).slice(0, 8);
+
     return (
-        <div className="" >
-            <div className="lg:flex">
-                <div className="relative flex flex-col flex-1 gap-y-5 px-5 lg:pl-24 py-6 bg-pm-gray">                    {/* Video */}
-                    {!loading && video?.url ? (
-                        <div className="relative w-full max-w-[1920px] pb-[56.25%] h-0 aspect-video">
-                            {videoError ? (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-800 text-white rounded-lg">
-                                    <div className="text-center">
-                                        <svg className="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <p className="mb-4 text-lg">Failed to load video</p>
-                                        <p className="mb-4 text-sm text-gray-400">The video file might be missing or corrupted.</p>
-                                        <button
-                                            onClick={retryVideoLoad}
-                                            className="px-6 py-2 bg-pm-purple hover:bg-pm-purple-hover rounded-lg transition-colors"
-                                        >
-                                            Retry Loading
-                                        </button>
+        <div className="watch-page min-h-screen">
+            {/* Ambient glow effect */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl"></div>
+            </div>
+
+            <div className="relative z-10 max-w-[1800px] mx-auto px-4 lg:px-8 py-6">
+                <div className="flex flex-col xl:flex-row gap-6">
+                    
+                    {/* Main Content (Left) */}
+                    <div className="flex-1 min-w-0">
+                        
+                        {/* Video Player */}
+                        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-zinc-900 shadow-2xl shadow-black/50">
+                            {loading ? (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className="w-12 h-12 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                                        <p className="text-zinc-400 text-sm">Loading video...</p>
                                     </div>
+                                </div>
+                            ) : videoError ? (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900">
+                                    <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mb-4">
+                                        <PlayIcon className="w-8 h-8 text-rose-400" />
+                                    </div>
+                                    <p className="text-zinc-300 mb-2">Failed to load video</p>
+                                    <p className="text-zinc-500 text-sm mb-4">The video file might be unavailable</p>
+                                    <button onClick={retryVideoLoad} className="watch-btn-accent">
+                                        Retry
+                                    </button>
                                 </div>
                             ) : (
                                 <>
                                     {!videoLoaded && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 text-white rounded-lg z-10">
-                                            <div className="text-center">
-                                                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pm-purple mx-auto mb-4"></div>
-                                                <p>Loading video...</p>
-                                                <p className="text-sm text-gray-400 mt-2">Please wait while the video loads</p>
+                                        <div className="absolute inset-0 flex items-center justify-center z-10 bg-zinc-900">
+                                            <div className="flex flex-col items-center gap-4">
+                                                <div className="w-12 h-12 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                                                <p className="text-zinc-400 text-sm">Loading...</p>
                                             </div>
                                         </div>
                                     )}
                                     <video
                                         ref={videoRef}
-                                        className="absolute inset-0 w-full h-full"
+                                        className="w-full h-full object-contain bg-black"
                                         controls
                                         preload="metadata"
                                         playsInline
-                                        onLoadStart={handleVideoLoadStart}
-                                        onLoadedMetadata={handleVideoLoadedMetadata}
                                         onLoadedData={handleVideoLoad}
-                                        onCanPlay={handleVideoCanPlay}
+                                        onCanPlay={handleVideoLoad}
                                         onError={handleVideoError}
-                                        key={`video-${video.id}-${video.url}`}
-                                        src={video.url.startsWith('http') ? video.url : `/videos/${video.url}`}
-                                    >
-                                        Your browser does not support the video tag.
-                                    </video>
+                                        onLoadedMetadata={setDefaultVolume}
+                                        key={video?.id}
+                                        src={video?.url?.startsWith('http') ? video.url : `/videos/${video?.url}`}
+                                    />
                                 </>
                             )}
                         </div>
-                    ) : (
-                        <div className="relative w-full max-w-[1920px] pb-[56.25%] h-0 aspect-video">
-                            <div className="absolute inset-0 flex items-center justify-center bg-gray-800 text-white rounded-lg">
-                                <div className="text-center">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pm-purple mx-auto mb-4"></div>
-                                    <p>Loading video...</p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
-                    {video && (
-                        <div className="flex flex-col gap-4 text-white">
-                            <h1 className="text-2xl font-semibold">{video.title}</h1>
-                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                                {/* Video Interactions */}
-                                <div className="flex items-center justify-between gap-5">
-                                    {/* Watch List Button */}
-                                    <button
+                        {/* Video Info */}
+                        {video && (
+                            <div className="mt-4 space-y-4">
+                                {/* Title */}
+                                <h1 className="text-xl lg:text-2xl font-bold text-zinc-100 leading-tight">
+                                    {video.title}
+                                </h1>
+
+                                {/* Meta Row */}
+                                <div className="flex flex-wrap items-center gap-3 text-sm">
+                                    <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 font-medium">
+                                        {video.categoryName || 'Uncategorized'}
+                                    </span>
+                                    <div className="flex items-center gap-1.5 text-zinc-400">
+                                        <EyeIcon className="w-4 h-4" />
+                                        <span>{video.viewCount?.toLocaleString() || 0} views</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-zinc-400">
+                                        <StarIcon className="w-4 h-4 text-amber-400" />
+                                        <span>{video.averageRating?.toFixed(1) || '0.0'}</span>
+                                        <span className="text-zinc-500">({video.ratingCount || 0})</span>
+                                    </div>
+                                </div>
+
+                                {/* Action Bar */}
+                                <div className="flex flex-wrap items-center gap-2 py-3 border-y border-zinc-800">
+                                    {/* Rating */}
+                                    <div className="relative">
+                                        <button 
+                                            onClick={() => setShowRatingDropdown(!showRatingDropdown)}
+                                            className="watch-btn-ghost flex items-center gap-2"
+                                        >
+                                            <StarIcon className="w-5 h-5 text-amber-400" />
+                                            <span>Rate</span>
+                                        </button>
+                                        {showRatingDropdown && (
+                                            <div className="absolute top-full left-0 mt-2 p-2 rounded-lg bg-zinc-800 border border-zinc-700 shadow-xl z-20">
+                                                <div className="flex gap-1">
+                                                    {[1, 2, 3, 4, 5].map((star) => (
+                                                        <button
+                                                            key={star}
+                                                            onClick={() => handleSubmitRating(star)}
+                                                            className="p-2 hover:bg-zinc-700 rounded-lg transition-colors"
+                                                        >
+                                                            <StarIcon className={`w-6 h-6 ${star <= userRating ? 'text-amber-400' : 'text-zinc-600'}`} />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Save to Watchlist */}
+                                    <button 
                                         onClick={handleWatchListToggle}
-                                        className={`p-2 ${isInWatchListState ? 'bg-pm-purple' : 'bg-se-gray'} hover:bg-purple-700 transition-colors rounded-full cursor-pointer`}
+                                        className={`watch-btn-ghost flex items-center gap-2 ${isInWatchListState ? 'text-amber-400 border-amber-500/50' : ''}`}
                                     >
-                                        <BookmarkIcon className={`h-5 ${isInWatchListState ? 'fill-white' : ''}`} />
+                                        <BookmarkIcon className={`w-5 h-5 ${isInWatchListState ? 'fill-amber-400' : ''}`} />
+                                        <span>{isInWatchListState ? 'Saved' : 'Save'}</span>
                                     </button>
 
-                                    <form onSubmit={handleSubmitRating} className="flex gap-2">
-                                        <select value={userRating} onChange={(e) => setUserRating(e.target.value)} className="p-2 bg-se-gray rounded-full cursor-pointer">
-                                            {[1, 2, 3, 4, 5].map((num) => (
-                                                <option key={num} value={num} className="cursor-pointer">{num} ⭐</option>
-                                            ))}
-                                        </select>
-                                        <button type="submit" className="bg-se-gray px-3 py-2 text-md rounded-full hover:bg-pm-purple-hover transition cursor-pointer">Submit Rating</button>
-                                    </form>
+                                    {/* Share */}
+                                    <button onClick={handleShare} className="watch-btn-ghost flex items-center gap-2">
+                                        <ShareIcon className="w-5 h-5" />
+                                        <span>Share</span>
+                                    </button>
                                 </div>
 
-                                {/* View & Rating Count */}
-                                <div className="flex gap-5 font-semibold text-lg">
-                                    <span>{video.viewCount || 0} Views</span>
-                                    <span className="flex gap-2">
-                                        <StarIcon className="w-5" />
-                                        {video.averageRating?.toFixed(1) || '0.0'} ({video.ratingCount || 0} Ratings)
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Details Section */}
-                    {video && (
-                        <div className="bg-se-gray text-white rounded-lg p-3">
-                            {/* Category */}
-                            <div className="flex items-center gap-3 font-semibold">
-                                <div className="px-3 py-1 bg-pm-purple rounded-full">
-                                    <span>{video.categoryName || 'Uncategorized'}</span>
-                                </div>
-                            </div>
-
-                            <p className="mt-2">{video.description || 'No description available.'}</p>
-                        </div>
-                    )}
-
-                    {/* Comment Section */}
-                    <div className="flex flex-col gap-4">
-                        <div className="flex justify-between items-center">
-                            <span className="text-white text-lg font-semibold">{videoComments.length} Comment{videoComments.length > 1 ? 's' : ''}</span>
-                        </div>
-
-                        <div className="flex gap-3 mb-5">
-                            <div>
-                                <OptimizedImage
-                                    src={"../assets/avatar.png"}
-                                    alt="Avatar"
-                                    className="h-12 w-12 object-cover rounded-full"
-                                />
-                            </div>
-
-                            <form onSubmit={handleSubmitComment} className="flex-1 space-y-6">
-                                <div>
-                                    <input
-                                        id="newComment"
-                                        name="newComment"
-                                        type="text"
-                                        value={newComment}
-                                        required
-                                        placeholder="Enter your comment here..."
-                                        onChange={(e) => setNewComment(e.target.value)}
-                                        onFocus={() => setIsFocusedComment(true)}
-                                        onBlur={(e) => {
-                                            // Prevent closing when interacting with emoji picker or buttons
-                                            setTimeout(() => {
-                                                if (!document.activeElement.closest('.comment-actions')) {
-                                                    setIsFocusedComment(false);
-                                                    setShowEmojiPicker(false);
-                                                }
-                                            }, 100);
-                                        }}
-                                        className="w-full mb-2 py-1.5 text-base text-white outline-none border-b-1 border-primary-gray placeholder:text-gray-400 focus:border-b-2 focus:border-white transition-colors sm:text-sm/6"
-                                    />
-
-                                    {/* Emoji Picker & Buttons */}
-                                    {isFocusedComment && (
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center p-2 rounded-full hover:bg-se-gray transition-colors">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                                    className="text-xl text-white cursor-pointer comment-actions"
-                                                >
-                                                    <FaceSmileIcon className="w-6 h-6" />
-                                                </button>
-
-                                                {showEmojiPicker && (
-                                                    <div className="mt-2">
-                                                        <Picker onSelect={handleEmojiSelect} />
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div className="flex items-center gap-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={handleCancel}
-                                                    className="justify-center rounded-md px-5 py-1.5 text-sm/6 font-semibold text-white hover:bg-se-gray transition-colors cursor-pointer"
-                                                >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    type="submit"
-                                                    disabled={loadingComment || !newComment.trim()}
-                                                    className={`justify-center rounded-md px-5 py-1.5 text-sm/6 font-semibold
-                                                        ${newComment.trim()
-                                                            ? 'bg-pm-purple text-white hover:bg-purple-600 transition-colors'
-                                                            : 'bg-primary-gray text-gray-600 transition-colors cursor-not-allowed'
-                                                        } cursor-pointer`}
-                                                >
-                                                    {loadingComment ? 'Posting...' : 'Post'}
-                                                </button>
-                                            </div>
-                                        </div>
+                                {/* Description */}
+                                <div className="watch-card p-4">
+                                    <div 
+                                        className={`text-zinc-300 text-sm leading-relaxed ${!showDescription ? 'line-clamp-2' : ''}`}
+                                    >
+                                        {video.description || 'No description available.'}
+                                    </div>
+                                    {video.description && video.description.length > 100 && (
+                                        <button 
+                                            onClick={() => setShowDescription(!showDescription)}
+                                            className="mt-2 text-amber-400 text-sm font-medium hover:text-amber-300 transition-colors"
+                                        >
+                                            {showDescription ? 'Show less' : 'Show more'}
+                                        </button>
                                     )}
                                 </div>
-                            </form>
-                        </div>
 
-                        {/* Comments */}
-                        {videoComments.map((comment) => (
-                            <div key={comment.id} className="mb-2 flex gap-5 text-white">
-                                <OptimizedImage
-                                    src={comment.avatar || "../assets/avatar.png"}
-                                    alt={comment.username}
-                                    className="h-12 w-12 object-cover rounded-full"
-                                />
-
-                                <div className="flex flex-col gap-1">
-                                    {/* User Details */}
-                                    <div className="flex gap-3 items-center text-md">
-                                        <h3 className="font-semibold">{comment.username}</h3>
-                                        <span className="text-sm text-gray-600">{formatDate(comment.datePosted)}</span>
+                                {/* Comments Section */}
+                                <div className="mt-6">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <ChatBubbleLeftIcon className="w-5 h-5 text-zinc-400" />
+                                        <h2 className="text-lg font-semibold text-zinc-100">
+                                            {videoComments.length} Comment{videoComments.length !== 1 ? 's' : ''}
+                                        </h2>
                                     </div>
 
-                                    {/* Content */}
-                                    <p className="text-md">{comment.content}</p>
-
-                                    {/* Comment Interactions */}
-                                    <div className="flex items-center gap-3 mt-1">
-                                        {/* Like Button */}
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => handleLikeComment(comment.id)}
-                                                className={`cursor-pointer ${comment.likedByUser ? 'text-pm-purple' : 'text-white'}`}
-                                            >
-                                                <HandThumbUpIcon className="w-5 hover:scale-110 transition" />
-                                            </button>
-                                            <span>{comment.likes}</span>
-                                        </div>
-
-                                        {/* Dislike Button */}
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => handleDislikeComment(comment.id)}
-                                                className={`cursor-pointer ${comment.dislikedByUser ? 'text-pm-purple' : 'text-white'}`}
-                                            >
-                                                <HandThumbDownIcon className="w-5 hover:scale-110 transition" />
-                                            </button>
-                                        </div>
-                                        {/* Reply Button */}
-                                        <button className="px-3 py-1 text-sm font-semibold text-white hover:bg-se-gray rounded-lg cursor-pointer" onClick={() => setReplyToComment(replyToComment === comment.id ? null : comment.id)}>
-                                            Reply
-                                        </button>
-                                    </div>
-
-                                    {replyToComment === comment.id && (
-                                        <div>
-                                            <form onSubmit={(e) => handleSubmitReply(e, comment.id)} className="space-y-6">
-                                                <div>
+                                    {/* Comment Input */}
+                                    {user && (
+                                        <form onSubmit={handleSubmitComment} className="mb-8">
+                                            <div className="flex gap-3">
+                                                <OptimizedImage
+                                                    src={user.avatar || "../assets/avatar.png"}
+                                                    alt="Your avatar"
+                                                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                                />
+                                                <div className="flex-1">
                                                     <input
-                                                        id="newReply"
-                                                        name="newReply"
                                                         type="text"
-                                                        value={newReply}
-                                                        required
-                                                        placeholder="Enter your reply here..."
-                                                        onChange={(e) => setNewReply(e.target.value)}
-                                                        onFocus={() => setIsFocusedReply(true)}
-                                                        onBlur={(e) => {
-                                                            // Prevent closing when interacting with emoji picker or buttons
-                                                            setTimeout(() => {
-                                                                if (!document.activeElement.closest('.comment-actions')) {
-                                                                    setIsFocusedReply(false);
-                                                                    setShowEmojiPicker(false);
-                                                                }
-                                                            }, 100);
-                                                        }}
-                                                        className="w-full mb-2 py-1.5 text-base text-white outline-none border-b-1 border-primary-gray placeholder:text-gray-400 focus:border-b-2 focus:border-white transition-colors sm:text-sm/6"
+                                                        value={newComment}
+                                                        onChange={(e) => setNewComment(e.target.value)}
+                                                        placeholder="Add a comment..."
+                                                        className="watch-input w-full"
                                                     />
-
-                                                    {/* Emoji Picker & Buttons */}
-                                                    {isFocusedReply && (
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center p-2 rounded-full hover:bg-primary-gray transition-colors">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                                                    className="text-xl text-white cursor-pointer comment-actions"
-                                                                >
-                                                                    <FaceSmileIcon className="w-6 h-6" />
-                                                                </button>
-
-                                                                {showEmojiPicker && (
-                                                                    <div className="mt-2">
-                                                                        <Picker onSelect={handleEmojiSelect} />
-                                                                    </div>
-                                                                )}
-                                                            </div>
-
-                                                            <div className="flex items-center gap-3">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={handleCancel}
-                                                                    className="justify-center rounded-md px-5 py-1.5 text-sm/6 font-semibold text-white hover:bg-primary-gray transition-colors cursor-pointer"
-                                                                >
-                                                                    Cancel
-                                                                </button>
-                                                                <button
-                                                                    type="submit"
-                                                                    disabled={loadingComment || !newReply.trim()}
-                                                                    className={`justify-center rounded-md px-5 py-1.5 text-sm/6 font-semibold
-                                                                        ${newReply.trim()
-                                                                            ? 'bg-pm-purple text-white hover:bg-purple-600 transition-colors'
-                                                                            : 'bg-primary-gray text-gray-600 transition-colors cursor-not-allowed'
-                                                                        } cursor-pointer`}
-                                                                >
-                                                                    {loadingComment ? 'Posting...' : 'Post'}
-                                                                </button>
-                                                            </div>
+                                                    {newComment.trim() && (
+                                                        <div className="flex justify-end gap-2 mt-3">
+                                                            <button 
+                                                                type="button" 
+                                                                onClick={() => setNewComment('')}
+                                                                className="watch-btn-ghost"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                            <button 
+                                                                type="submit" 
+                                                                disabled={loadingComment}
+                                                                className="watch-btn-accent"
+                                                            >
+                                                                {loadingComment ? 'Posting...' : 'Comment'}
+                                                            </button>
                                                         </div>
                                                     )}
                                                 </div>
-                                            </form>
-                                        </div>
+                                            </div>
+                                        </form>
                                     )}
 
-                                    {/* Number of Replies */}
-                                    {comment.replies?.length > 0 && (
-                                        <button className="px-2 py-1 mt-2 flex w-fit items-center justify-center gap-2 hover:bg-pm-purple-hover rounded-full transition-colors cursor-pointer" onClick={() => setToggleReplies(toggleReplies === comment.id ? null : comment.id)}>
-                                            {toggleReplies === comment.id ? <ChevronUpIcon className="h-5 text-white" /> : <ChevronDownIcon className="h-5 text-white" />}
-                                            <span className="text-white">{comment.replies.length} Replies</span>
-                                        </button>
-                                    )}
-
-                                    {toggleReplies === comment.id && (
-                                        <div className="flex flex-col gap-2">
-                                            {comment.replies.map((reply) => {
-                                                return (
-                                                    <div key={reply.id} className="py-1 flex gap-5">
-                                                        <OptimizedImage
-                                                            src={reply.avatar || "../assets/avatar.png"}
-                                                            alt={reply.username}
-                                                            className="h-12 w-12 object-cover rounded-full"
-                                                        />
-
-                                                        <div className="flex flex-col gap-1">
-                                                            {/* User Details */}
-                                                            <div className="flex gap-3 items-center">
-                                                                <h3 className="text-md font-semibold text-white">{reply.username}</h3>
-                                                                <span className="text-md text-gray-600">{formatDate(reply.datePosted)}</span>
-                                                            </div>
-
-                                                            {/* Comment */}
-                                                            <p className="text-md text-white">{reply.content}</p>
-
-                                                            {/* Comment Interactions */}
-                                                            <div className="flex items-center gap-3 mt-1">
-                                                                {/* Like Button */}
-                                                                <div className="flex gap-2">
-                                                                    <button className="cursor-pointer">
-                                                                        <HandThumbUpIcon className="text-white w-5" />
-                                                                    </button>
-                                                                    <span className="text-white">{reply.likes}</span>
-                                                                </div>
-
-                                                                {/* Dislike Button */}
-                                                                <div className="flex gap-2">
-                                                                    <button className="cursor-pointer">
-                                                                        <HandThumbDownIcon className="text-white w-5" />
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>                                                        {user.id === reply.userId && (
-                                                            <div className="ml-auto">
-                                                                <button
-                                                                    onClick={() => handleDeleteComment(reply.id)}
-                                                                    className="p-2 rounded-full hover:bg-red-400 transition-colors cursor-pointer"
+                                    {/* Comments List */}
+                                    <div className="space-y-6">
+                                        {videoComments.map((comment) => (
+                                            <div key={comment.id} className="group">
+                                                <div className="flex gap-3">
+                                                    <OptimizedImage
+                                                        src={comment.avatar || "../assets/avatar.png"}
+                                                        alt={comment.username}
+                                                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                                    />
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="font-medium text-zinc-200">{comment.username}</span>
+                                                            <span className="text-xs text-zinc-500">{formatDate(comment.datePosted)}</span>
+                                                        </div>
+                                                        <p className="text-zinc-300 text-sm mb-2">{comment.content}</p>
+                                                        
+                                                        {/* Comment Actions */}
+                                                        <div className="flex items-center gap-4">
+                                                            <button 
+                                                                onClick={() => handleLikeComment(comment.id)}
+                                                                className={`flex items-center gap-1.5 text-sm transition-colors ${comment.likedByUser ? 'text-amber-400' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                                            >
+                                                                <HandThumbUpIcon className="w-4 h-4" />
+                                                                <span>{comment.likes || 0}</span>
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleDislikeComment(comment.id)}
+                                                                className={`flex items-center gap-1.5 text-sm transition-colors ${comment.dislikedByUser ? 'text-amber-400' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                                            >
+                                                                <HandThumbDownIcon className="w-4 h-4" />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => setReplyToComment(replyToComment === comment.id ? null : comment.id)}
+                                                                className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+                                                            >
+                                                                Reply
+                                                            </button>
+                                                            {user?.id === comment.userId && (
+                                                                <button 
+                                                                    onClick={() => handleDeleteComment(comment.id)}
+                                                                    className="text-zinc-500 hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
                                                                 >
-                                                                    <TrashIcon className="w-5 text-white" />
+                                                                    <TrashIcon className="w-4 h-4" />
                                                                 </button>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Reply Input */}
+                                                        {replyToComment === comment.id && (
+                                                            <form onSubmit={(e) => handleSubmitReply(e, comment.id)} className="mt-4 pl-4 border-l-2 border-zinc-700">
+                                                                <input
+                                                                    type="text"
+                                                                    value={newReply}
+                                                                    onChange={(e) => setNewReply(e.target.value)}
+                                                                    placeholder="Write a reply..."
+                                                                    className="watch-input w-full text-sm"
+                                                                    autoFocus
+                                                                />
+                                                                <div className="flex justify-end gap-2 mt-2">
+                                                                    <button 
+                                                                        type="button" 
+                                                                        onClick={() => { setReplyToComment(null); setNewReply(''); }}
+                                                                        className="watch-btn-ghost text-sm py-1.5"
+                                                                    >
+                                                                        Cancel
+                                                                    </button>
+                                                                    <button 
+                                                                        type="submit" 
+                                                                        disabled={!newReply.trim()}
+                                                                        className="watch-btn-accent text-sm py-1.5"
+                                                                    >
+                                                                        Reply
+                                                                    </button>
+                                                                </div>
+                                                            </form>
+                                                        )}
+
+                                                        {/* Replies Toggle */}
+                                                        {comment.replies?.length > 0 && (
+                                                            <button 
+                                                                onClick={() => setToggleReplies(toggleReplies === comment.id ? null : comment.id)}
+                                                                className="flex items-center gap-1.5 mt-3 text-sm text-amber-400 hover:text-amber-300 transition-colors"
+                                                            >
+                                                                {toggleReplies === comment.id ? (
+                                                                    <ChevronUpIcon className="w-4 h-4" />
+                                                                ) : (
+                                                                    <ChevronDownIcon className="w-4 h-4" />
+                                                                )}
+                                                                <span>{comment.replies.length} {comment.replies.length === 1 ? 'reply' : 'replies'}</span>
+                                                            </button>
+                                                        )}
+
+                                                        {/* Replies List */}
+                                                        {toggleReplies === comment.id && comment.replies && (
+                                                            <div className="mt-4 pl-4 border-l-2 border-zinc-800 space-y-4">
+                                                                {comment.replies.map((reply) => (
+                                                                    <div key={reply.id} className="flex gap-3 group/reply">
+                                                                        <OptimizedImage
+                                                                            src={reply.avatar || "../assets/avatar.png"}
+                                                                            alt={reply.username}
+                                                                            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                                                        />
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <div className="flex items-center gap-2 mb-1">
+                                                                                <span className="font-medium text-zinc-200 text-sm">{reply.username}</span>
+                                                                                <span className="text-xs text-zinc-500">{formatDate(reply.datePosted)}</span>
+                                                                            </div>
+                                                                            <p className="text-zinc-300 text-sm">{reply.content}</p>
+                                                                            <div className="flex items-center gap-3 mt-2">
+                                                                                <button className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300">
+                                                                                    <HandThumbUpIcon className="w-3.5 h-3.5" />
+                                                                                    <span>{reply.likes || 0}</span>
+                                                                                </button>
+                                                                                <button className="text-xs text-zinc-500 hover:text-zinc-300">
+                                                                                    <HandThumbDownIcon className="w-3.5 h-3.5" />
+                                                                                </button>
+                                                                                {user?.id === reply.userId && (
+                                                                                    <button 
+                                                                                        onClick={() => handleDeleteComment(reply.id)}
+                                                                                        className="text-zinc-500 hover:text-rose-400 opacity-0 group-hover/reply:opacity-100 transition-opacity"
+                                                                                    >
+                                                                                        <TrashIcon className="w-3.5 h-3.5" />
+                                                                                    </button>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
                                                             </div>
                                                         )}
                                                     </div>
-                                                )
-                                            })}
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {videoComments.length === 0 && (
+                                            <div className="text-center py-12">
+                                                <ChatBubbleLeftIcon className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
+                                                <p className="text-zinc-500">No comments yet. Be the first to comment!</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Sidebar - Related Videos (Right) */}
+                    <div className="xl:w-[400px] flex-shrink-0">
+                        <div className="xl:sticky xl:top-24">
+                            <h2 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
+                                <PlayIcon className="w-5 h-5 text-amber-400" />
+                                Up Next
+                            </h2>
+                            
+                            <div className="space-y-3 max-h-[calc(100vh-150px)] overflow-y-auto watch-scrollbar pr-2">
+                                {relatedVideos.map((relatedVideo) => (
+                                    <div 
+                                        key={relatedVideo.id}
+                                        onClick={() => navigateWithLoading(`/watch/${relatedVideo.id}`)}
+                                        className="watch-card p-2 flex gap-3 cursor-pointer group"
+                                    >
+                                        <div className="relative w-40 flex-shrink-0 aspect-video rounded-lg overflow-hidden">
+                                            <OptimizedImage
+                                                src={getImageSrc(relatedVideo.thumbnailUrl)}
+                                                alt={relatedVideo.title}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            />
+                                            {/* Duration badge placeholder */}
+                                            <div className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/80 rounded text-xs text-white font-medium">
+                                                <ClockIcon className="w-3 h-3 inline mr-0.5" />
+                                                --:--
+                                            </div>
                                         </div>
-                                    )}
-                                </div>                                {user.id === comment.userId && (
-                                    <div className="ml-auto">
-                                        <button
-                                            onClick={() => handleDeleteComment(comment.id)}
-                                            className="p-2 rounded-full hover:bg-red-400 transition-colors cursor-pointer"
-                                        >
-                                            <TrashIcon className="w-5 text-white" />
-                                        </button>
+                                        <div className="flex-1 min-w-0 py-1">
+                                            <h3 className="text-sm font-medium text-zinc-200 line-clamp-2 mb-1.5 group-hover:text-amber-400 transition-colors">
+                                                {relatedVideo.title}
+                                            </h3>
+                                            <div className="space-y-1">
+                                                <p className="text-xs text-zinc-500">{relatedVideo.viewCount?.toLocaleString() || 0} views</p>
+                                                <div className="flex items-center gap-1 text-xs text-zinc-500">
+                                                    <StarIcon className="w-3 h-3 text-amber-400" />
+                                                    <span>{relatedVideo.averageRating?.toFixed(1) || 'N/A'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {relatedVideos.length === 0 && (
+                                    <div className="text-center py-8">
+                                        <p className="text-zinc-500 text-sm">No related videos</p>
                                     </div>
                                 )}
-                            </div>))}
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                {/*
-                    <div ref={videoRef} className="relative w-full max-w-[1920px] pb-[56.25%] h-0 aspect-video">
-                        {isVideoVisible && (
-                            <video 
-                                className="absolute inset-0 w-full h-full rounded-lg" 
-                                controls
-                                preload="metadata"
-                                onError={(e) => {
-                                    console.error('Video loading error:', e);
-                                    toast.error('Failed to load video. Please try again.');
-                                }}
-                            >
-                                <source 
-                                    src={`../videos/${video.url}`} 
-                                    type="video/mp4" 
-                                />
-                                Your browser does not support the video tag.
-                            </video>
-                        }
-                    </div>
-                */}
-
-                <Sidebar />
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default WatchPage
+export default WatchPage;
