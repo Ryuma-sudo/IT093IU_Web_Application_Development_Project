@@ -83,6 +83,12 @@ public class AuthController {
     @PostMapping(value = "/signin", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response) {
         try {
+            // Validate request is not null
+            if (loginRequest == null || loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
+                logger.error("Login request is missing required fields");
+                return ResponseEntity.badRequest().body(new MessageResponse("Error: Username and password are required"));
+            }
+
             logger.info("Authentication attempt for user: {}", loginRequest.getUsername());
 
             Authentication authentication = authenticationManager.authenticate(
@@ -106,7 +112,8 @@ public class AuthController {
                     .build();
             response.addHeader("Set-Cookie", jwtCookie.toString());
 
-            logger.info("User {} successfully authenticated", loginRequest.getUsername());            return ResponseEntity.ok(new JwtResponse(
+            logger.info("User {} successfully authenticated", loginRequest.getUsername());
+            return ResponseEntity.ok(new JwtResponse(
                 null, // Don't send token in response
                 userDetails.getId(),
                 userDetails.getUsername(),
@@ -115,8 +122,11 @@ public class AuthController {
                 roles
             ));
         } catch (BadCredentialsException e) {
-            logger.error("Authentication failed for user: {}", loginRequest.getUsername());
+            logger.error("Authentication failed for user: {}", loginRequest != null ? loginRequest.getUsername() : "unknown");
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Invalid username or password"));
+        } catch (Exception e) {
+            logger.error("Unexpected error during authentication: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Authentication failed. Please check your credentials and try again."));
         }
     }
 
