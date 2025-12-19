@@ -39,14 +39,14 @@ const Navbar = () => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside)
         }
-    }, []);    const handleMovieClick = (movie) => {
-        // Handle movie selection
+    }, []);
+
+    const handleMovieClick = (movie) => {
         console.log('Selected movie:', movie)
         setIsSearchFocused(false)
     }
 
     const handleRecentSearchClick = (search) => {
-        // Handle recent search selection
         setSearchQuery(search)
         setIsSearchFocused(false)
     }
@@ -64,12 +64,12 @@ const Navbar = () => {
     }
 
     return (
-        <Disclosure as="nav" className="shadow-sm">
+        <Disclosure as="nav" className="relative">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="relative flex h-16 items-center justify-between">
+                    {/* Mobile menu button */}
                     <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
-                        {/* Mobile menu button*/}
-                        <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-primary-text hover:text-white focus:ring-2 focus:ring-white focus:outline-hidden focus:ring-inset">
+                        <DisclosureButton className="group relative inline-flex items-center justify-center rounded-lg p-2 text-nf-text-muted hover:bg-nf-surface hover:text-nf-text transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nf-accent/50">
                             <span className="absolute -inset-0.5" />
                             <span className="sr-only">Open main menu</span>
                             <Bars3Icon aria-hidden="true" className="block size-6 group-data-open:hidden" />
@@ -80,27 +80,27 @@ const Navbar = () => {
                     {/* Logo */}
                     <div className="flex flex-1 items-center justify-center sm:justify-start">
                         <div className="flex shrink-0 items-center">
-                            <Link to="/">
+                            <Link to="/" className="group">
                                 <OptimizedImage
-                                    alt="Your Company"
+                                    alt="Netflex"
                                     src="../assets/logo.png"
-                                    className="h-16 w-auto"
+                                    className="h-14 w-auto transition-transform duration-200 group-hover:scale-105"
                                 />
                             </Link>
                         </div>
                     </div>
 
-                    {/* Search and Login */}
-                    <div className="absolute inset-y-0 right-0 flex items-center gap-3 pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                        { user ? (
+                    {/* Right side - Search and User actions */}
+                    <div className="absolute inset-y-0 right-0 flex items-center gap-2 pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+                        {user ? (
                             <>
+                                {/* Search */}
                                 <div className="relative" ref={searchRef}>
-                                    {/* Search Icon */}
                                     <button
                                         onClick={() => setIsSearchFocused(true)}
-                                        className="block p-1 text-gray-400 hover:text-white cursor-pointer"
+                                        className="p-2.5 text-nf-text-muted hover:text-nf-accent rounded-lg hover:bg-nf-surface transition-all duration-200 cursor-pointer"
                                     >
-                                        <MagnifyingGlassIcon className="w-6 h-6" />
+                                        <MagnifyingGlassIcon className="w-5 h-5" />
                                     </button>
 
                                     {/* Search Overlay and Card */}
@@ -112,34 +112,30 @@ const Navbar = () => {
                                                     initial={{ opacity: 0 }}
                                                     animate={{ opacity: 1 }}
                                                     exit={{ opacity: 0 }}
-                                                    className="fixed inset-0 bg-black/50 z-40"
+                                                    className="fixed inset-0 bg-nf-bg/80 backdrop-blur-sm z-40"
                                                     onClick={() => setIsSearchFocused(false)}
                                                 />
                                                 
                                                 {/* Search Card */}
                                                 <motion.div
-                                                    initial={{ opacity: 0, y: -10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, y: -10 }}
+                                                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
                                                     transition={{ duration: 0.2, ease: "easeOut" }}
-                                                    className="fixed top-16 left-0 lg:left-auto w-full lg:w-1/6 z-50"
+                                                    className="fixed top-16 left-0 lg:left-auto lg:right-8 w-full lg:w-96 z-50"
                                                 >
-                                                    <div className="bg-pm-gray shadow-lg p-4">
+                                                    <div className="nf-card-static p-5 m-4 lg:m-0 shadow-2xl">
                                                         <form onSubmit={handleSearch} className="mb-4">
                                                             <div className="relative">
+                                                                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-nf-text-muted" />
                                                                 <input
                                                                     type="text"
-                                                                    placeholder="Search..."
+                                                                    placeholder="Search movies, shows..."
                                                                     value={searchQuery}
                                                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                                                    className="w-full px-4 py-2 rounded-full border border-gray-600 text-white bg-primary-text focus:outline-none focus:border-purple-500"
+                                                                    className="nf-input pl-10 pr-4"
                                                                     autoFocus
                                                                 />
-                                                                <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-500">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                                                                    </svg>
-                                                                </button>
                                                             </div>
                                                         </form>
                                                         <SearchCard
@@ -154,60 +150,66 @@ const Navbar = () => {
                                     </AnimatePresence>
                                 </div>
 
-                                {/* Watch List */}
+                                {/* Admin Dashboard */}
                                 <Link
                                     to={`/admin/${user.id}`}
-                                    className="relative rounded-full bg-primary-text p-1 text-gray-400 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
+                                    className="p-2.5 text-nf-text-muted hover:text-nf-secondary rounded-lg hover:bg-nf-surface transition-all duration-200"
+                                    title="Admin Dashboard"
                                 >
-                                    <span className="absolute -inset-1.5" />
-                                    <span className="sr-only">View admin dashboard</span>
-                                    <LockClosedIcon aria-hidden="true" className="size-6" />
+                                    <LockClosedIcon aria-hidden="true" className="size-5" />
                                 </Link>
 
                                 {/* Watch List */}
                                 <Link
                                     to={`/watchlist/${user.id}`}
-                                    className="relative rounded-full bg-primary-text p-1 text-gray-400 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
+                                    className="p-2.5 text-nf-text-muted hover:text-nf-accent rounded-lg hover:bg-nf-surface transition-all duration-200"
+                                    title="Watch List"
                                 >
-                                    <span className="absolute -inset-1.5" />
-                                    <span className="sr-only">View watch list</span>
-                                    <BookmarkIcon aria-hidden="true" className="size-6" />
+                                    <BookmarkIcon aria-hidden="true" className="size-5" />
                                 </Link>
 
                                 {/* Profile Dropdown */}
-                                <Menu as="div" className="relative ml-3">
-                                    <div>
-                                        <MenuButton className="relative flex rounded-full bg-gray-800 text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden cursor-pointer">
-                                            <span className="absolute -inset-1.5" />
-                                            <span className="sr-only">Open user menu</span>
-                                            <OptimizedImage
-                                                alt=""
-                                                src={user.avatar || "../assets/avatar.png"}
-                                                className="size-8 rounded-full"
-                                            />
-                                        </MenuButton>
-                                    </div>
+                                <Menu as="div" className="relative ml-2">
+                                    <MenuButton className="relative flex items-center rounded-full ring-2 ring-nf-border hover:ring-nf-accent transition-all duration-200 cursor-pointer focus:outline-none focus:ring-nf-accent">
+                                        <span className="absolute -inset-1.5" />
+                                        <span className="sr-only">Open user menu</span>
+                                        <OptimizedImage
+                                            alt=""
+                                            src={user.avatar || "../assets/avatar.png"}
+                                            className="size-9 rounded-full object-cover"
+                                        />
+                                    </MenuButton>
 
                                     <MenuItems
                                         transition
-                                        className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 ring-1 shadow-lg ring-black/5 transition focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
+                                        className="absolute right-0 z-50 mt-3 w-56 origin-top-right rounded-xl nf-card-static py-2 shadow-xl transition focus:outline-none data-closed:scale-95 data-closed:opacity-0 data-enter:duration-150 data-enter:ease-out data-leave:duration-100 data-leave:ease-in"
                                     >
+                                        <div className="px-4 py-3 border-b border-nf-border">
+                                            <p className="text-sm font-semibold text-nf-text">{user.username || 'User'}</p>
+                                            <p className="text-xs text-nf-text-muted truncate">{user.email}</p>
+                                        </div>
                                         <MenuItem>
                                             <Link
                                                 to="/profile"
-                                                className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-nf-text-secondary hover:bg-nf-surface-hover hover:text-nf-text transition-colors"
                                             >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                                </svg>
                                                 Your Profile
                                             </Link>
                                         </MenuItem>
                                         <MenuItem>
                                             <button
-                                                className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden cursor-pointer"
+                                                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-nf-tertiary hover:bg-nf-surface-hover transition-colors cursor-pointer"
                                                 onClick={async () => {
                                                     await logout();
                                                     navigateWithLoading("/");
                                                 }}
                                             >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                                                </svg>
                                                 Log Out
                                             </button>
                                         </MenuItem>
@@ -215,17 +217,46 @@ const Navbar = () => {
                                 </Menu>
                             </>
                         ) : (
-                            <>
-                            <Link to="/login">
-                                <button className="bg-pm-purple px-5 py-2 rounded-xl text-white flex items-center gap-2 hover:bg-pm-purple-hover transition-colors cursor-pointer">
-                                    Log in 
-                                </button> 
-                            </Link>
-                        </>
+                            <div className="flex items-center gap-3">
+                                <Link to="/login">
+                                    <button className="nf-btn nf-btn-ghost text-sm px-4 py-2">
+                                        Log in
+                                    </button>
+                                </Link>
+                                <Link to="/signup">
+                                    <button className="nf-btn nf-btn-primary text-sm px-5 py-2">
+                                        Sign up
+                                    </button>
+                                </Link>
+                            </div>
                         )}
                     </div>
                 </div>
             </div>
+
+            {/* Mobile menu panel */}
+            <DisclosurePanel className="sm:hidden border-t border-nf-border bg-nf-surface">
+                <div className="space-y-1 px-4 pb-3 pt-2">
+                    {user && (
+                        <>
+                            <Link
+                                to={`/watchlist/${user.id}`}
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-nf-text-secondary hover:bg-nf-surface-hover hover:text-nf-text transition-colors"
+                            >
+                                <BookmarkIcon className="w-5 h-5" />
+                                Watch List
+                            </Link>
+                            <Link
+                                to={`/admin/${user.id}`}
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-nf-text-secondary hover:bg-nf-surface-hover hover:text-nf-text transition-colors"
+                            >
+                                <LockClosedIcon className="w-5 h-5" />
+                                Admin Dashboard
+                            </Link>
+                        </>
+                    )}
+                </div>
+            </DisclosurePanel>
         </Disclosure>
     )
 }

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, BookmarkIcon, PlayIcon } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 import { useUserStore } from '../stores/useUserStore';
 import { useWatchListStore } from '../stores/useWatchListStore';
@@ -34,63 +34,122 @@ const WatchListPage = () => {
 
     if (loading) {
         return (
-            <div className="bg-black h-screen text-white flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pm-purple"></div>
+            <div className="nf-page min-h-screen flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nf-accent"></div>
+                    <span className="text-nf-text-muted">Loading your watchlist...</span>
+                </div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="bg-black h-screen text-white flex items-center justify-center">
-                <p className="text-red-500">{error}</p>
+            <div className="nf-page min-h-screen flex items-center justify-center">
+                <div className="nf-card-static p-8 text-center max-w-md">
+                    <div className="p-4 rounded-full bg-nf-error/10 inline-block mb-4">
+                        <svg className="w-8 h-8 text-nf-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-xl font-semibold text-nf-text mb-2">Something went wrong</h2>
+                    <p className="text-nf-error">{error}</p>
+                </div>
             </div>
         );
     }
 
-    return (<div className="bg-black min-h-screen text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-            <h1 className="text-2xl font-bold mb-5">Your Watch List</h1>
-            {!watchList || watchList.length === 0 ? (
-                <div className="text-center py-16">
-                    <div className="text-gray-400 text-lg mb-4">Your watch list is empty</div>
-                    <p className="text-gray-500 text-sm">Start adding videos to your watch list to see them here!</p>
-                </div>) : (
-                <div className="flex flex-col gap-3">
-                    {watchList && watchList.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between px-5 py-3 rounded-lg bg-se-gray hover:bg-pm-purple-hover transition-all duration-300 ease-out group">
-                            <div
-                                className="flex gap-3 cursor-pointer flex-1 transform transition-all duration-200 group-hover:scale-[1.02]" onClick={() => navigateWithLoading(`/watch/${item.id}`)}
+    return (
+        <div className="nf-page min-h-screen">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+                {/* Header */}
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="p-3 rounded-xl bg-nf-accent/10">
+                        <BookmarkIcon className="w-7 h-7 text-nf-accent" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold text-nf-text">Your Watchlist</h1>
+                        <p className="text-nf-text-secondary mt-1">
+                            {watchList?.length || 0} videos saved for later
+                        </p>
+                    </div>
+                </div>
+
+                {/* Content */}
+                {!watchList || watchList.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <div className="p-6 rounded-2xl bg-nf-surface mb-6">
+                            <BookmarkIcon className="w-16 h-16 text-nf-text-muted" />
+                        </div>
+                        <h2 className="text-xl font-semibold text-nf-text mb-2">
+                            Your watchlist is empty
+                        </h2>
+                        <p className="text-nf-text-secondary max-w-md mb-6">
+                            Start adding videos to your watchlist by clicking the bookmark icon on any video.
+                        </p>
+                        <button 
+                            onClick={() => navigateWithLoading('/')}
+                            className="nf-btn nf-btn-primary"
+                        >
+                            Browse Videos
+                        </button>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {watchList.map((item, index) => (
+                            <div 
+                                key={item.id} 
+                                className="group nf-card-static p-4 flex items-center gap-4 hover:border-nf-border-hover transition-all duration-200"
+                                style={{ animationDelay: `${index * 50}ms` }}
                             >
-                                <OptimizedImage
-                                    src={getImageSrc(item.thumbnailUrl)}
-                                    alt={item.title} className="max-w-32 aspect-[16/9] object-cover rounded-lg shadow-md group-hover:shadow-lg transition-all duration-300"
-                                />
-                                <div className="flex flex-col justify-center">
-                                    <span className="text-xl font-semibold line-clamp-2 mb-2">{item.title}</span>
-                                    <div className="flex items-center gap-4 text-sm text-gray-400">
-                                        <span className="flex items-center gap-2">
-                                            <StarIcon className="w-3" />
+                                {/* Thumbnail */}
+                                <div 
+                                    className="relative flex-shrink-0 w-40 aspect-video rounded-lg overflow-hidden cursor-pointer"
+                                    onClick={() => navigateWithLoading(`/watch/${item.id}`)}
+                                >
+                                    <OptimizedImage
+                                        src={getImageSrc(item.thumbnailUrl)}
+                                        alt={item.title}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-nf-bg/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <PlayIcon className="w-10 h-10 text-nf-accent" />
+                                    </div>
+                                </div>
+
+                                {/* Info */}
+                                <div 
+                                    className="flex-1 min-w-0 cursor-pointer" 
+                                    onClick={() => navigateWithLoading(`/watch/${item.id}`)}
+                                >
+                                    <h3 className="text-lg font-semibold text-nf-text line-clamp-1 group-hover:text-nf-accent transition-colors">
+                                        {item.title}
+                                    </h3>
+                                    <div className="flex items-center gap-4 mt-2 text-sm text-nf-text-muted">
+                                        <span className="flex items-center gap-1.5">
+                                            <StarIcon className="w-4 h-4 text-nf-accent" />
                                             {item.averageRating ? Number(item.averageRating).toFixed(1) : 'N/A'}
                                         </span>
-                                        <span>{item.viewCount} views</span>
-                                    </div>                                    </div>
+                                        <span>{item.viewCount?.toLocaleString() || 0} views</span>
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex-shrink-0">
+                                    <button
+                                        onClick={() => handleRemoveFromWatchList(item.id)}
+                                        className="p-3 rounded-lg text-nf-text-muted hover:text-nf-error hover:bg-nf-error/10 transition-all duration-200 cursor-pointer"
+                                        title="Remove from watchlist"
+                                    >
+                                        <TrashIcon className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
-                            <div className="ml-4">
-                                <button
-                                    onClick={() => handleRemoveFromWatchList(item.id)}
-                                    className="p-2 hover:bg-red-500 rounded-full transition-all duration-300 ease-out transform hover:scale-110 hover:shadow-lg hover:shadow-red-500/25 cursor-pointer group/button"
-                                    title="Remove from watch list"
-                                >
-                                    <TrashIcon className="w-5 text-white group-hover/button:text-red-100 transition-colors duration-200" />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
-    </div>
     );
 };
 

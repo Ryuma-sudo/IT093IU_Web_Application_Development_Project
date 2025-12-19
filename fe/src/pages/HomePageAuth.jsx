@@ -16,16 +16,20 @@ const HomePageAuth = () => {
     const safeCategories = Array.isArray(categories) ? categories : [];
     
     return (
-        <div>
-            {/* Video Carousel */}
+        <div className="nf-page">
+            {/* Hero Video Carousel */}
             <VideoCarousel />
 
-            {/* Video Sections*/}
-            {safeCategories.map(category => {
-                return (
-                    <VideoSection key={category.id} cid={category.id} name={category.name} />
-                )
-            })}
+            {/* Video Sections by Category */}
+            <div className="relative z-10">
+                {safeCategories.map(category => (
+                    <VideoSection 
+                        key={category.id} 
+                        cid={category.id} 
+                        name={category.name} 
+                    />
+                ))}
+            </div>
         </div>
     )
 }
