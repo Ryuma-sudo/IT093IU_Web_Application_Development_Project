@@ -15,18 +15,18 @@ import { getImageSrc } from '../utils/imageUtils';
 import { useNavigateWithLoading } from '../hooks/useNavigateWithLoading';
 
 import OptimizedImage from '../components/OptimizedImage';
-import { 
-    StarIcon, 
-    ChevronUpIcon, 
-    ChevronDownIcon, 
+import {
+    StarIcon,
+    ChevronUpIcon,
+    ChevronDownIcon,
     EyeIcon,
     ClockIcon,
     PlayIcon
 } from '@heroicons/react/24/solid';
-import { 
-    BookmarkIcon, 
-    HandThumbUpIcon, 
-    HandThumbDownIcon, 
+import {
+    BookmarkIcon,
+    HandThumbUpIcon,
+    HandThumbDownIcon,
     ChatBubbleLeftIcon,
     ShareIcon,
     TrashIcon
@@ -38,7 +38,7 @@ const WatchPage = () => {
     const { id } = useParams();
     const navigateWithLoading = useNavigateWithLoading();
     const { videoRef, setDefaultVolume } = useVideoVolume(0.5);
-    
+
     const { user } = useUserStore();
     const { video, videos, loading, fetchVideo, fetchAllVideos } = useVideoStore();
     const { videoComments, loadingComment, createComment, fetchCommentByVideo, deleteComment, createReply } = useCommentStore();
@@ -210,7 +210,11 @@ const WatchPage = () => {
         setVideoError(false);
         setVideoLoaded(false);
         if (videoRef.current && video?.url) {
-            videoRef.current.src = `/videos/${video.url}`;
+            // Handle both absolute paths (/videos/...) and relative paths (filename.mp4)
+            const videoSrc = video.url.startsWith('http') || video.url.startsWith('/')
+                ? video.url
+                : `/videos/${video.url}`;
+            videoRef.current.src = videoSrc;
             videoRef.current.load();
         }
     };
@@ -233,10 +237,10 @@ const WatchPage = () => {
 
             <div className="relative z-10 max-w-[1800px] mx-auto px-4 lg:px-8 py-6">
                 <div className="flex flex-col xl:flex-row gap-6">
-                    
+
                     {/* Main Content (Left) */}
                     <div className="flex-1 min-w-0">
-                        
+
                         {/* Video Player */}
                         <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-zinc-900 shadow-2xl shadow-black/50">
                             {loading ? (
@@ -278,7 +282,7 @@ const WatchPage = () => {
                                         onError={handleVideoError}
                                         onLoadedMetadata={setDefaultVolume}
                                         key={video?.id}
-                                        src={video?.url?.startsWith('http') ? video.url : `/videos/${video?.url}`}
+                                        src={video?.url?.startsWith('http') || video?.url?.startsWith('/') ? video.url : `/videos/${video?.url}`}
                                     />
                                 </>
                             )}
@@ -312,7 +316,7 @@ const WatchPage = () => {
                                 <div className="flex flex-wrap items-center gap-2 py-3 border-y border-zinc-800">
                                     {/* Rating */}
                                     <div className="relative">
-                                        <button 
+                                        <button
                                             onClick={() => setShowRatingDropdown(!showRatingDropdown)}
                                             className="watch-btn-ghost flex items-center gap-2"
                                         >
@@ -337,7 +341,7 @@ const WatchPage = () => {
                                     </div>
 
                                     {/* Save to Watchlist */}
-                                    <button 
+                                    <button
                                         onClick={handleWatchListToggle}
                                         className={`watch-btn-ghost flex items-center gap-2 ${isInWatchListState ? 'text-amber-400 border-amber-500/50' : ''}`}
                                     >
@@ -354,13 +358,13 @@ const WatchPage = () => {
 
                                 {/* Description */}
                                 <div className="watch-card p-4">
-                                    <div 
+                                    <div
                                         className={`text-zinc-300 text-sm leading-relaxed ${!showDescription ? 'line-clamp-2' : ''}`}
                                     >
                                         {video.description || 'No description available.'}
                                     </div>
                                     {video.description && video.description.length > 100 && (
-                                        <button 
+                                        <button
                                             onClick={() => setShowDescription(!showDescription)}
                                             className="mt-2 text-amber-400 text-sm font-medium hover:text-amber-300 transition-colors"
                                         >
@@ -397,15 +401,15 @@ const WatchPage = () => {
                                                     />
                                                     {newComment.trim() && (
                                                         <div className="flex justify-end gap-2 mt-3">
-                                                            <button 
-                                                                type="button" 
+                                                            <button
+                                                                type="button"
                                                                 onClick={() => setNewComment('')}
                                                                 className="watch-btn-ghost"
                                                             >
                                                                 Cancel
                                                             </button>
-                                                            <button 
-                                                                type="submit" 
+                                                            <button
+                                                                type="submit"
                                                                 disabled={loadingComment}
                                                                 className="watch-btn-accent"
                                                             >
@@ -434,30 +438,30 @@ const WatchPage = () => {
                                                             <span className="text-xs text-zinc-500">{formatDate(comment.datePosted)}</span>
                                                         </div>
                                                         <p className="text-zinc-300 text-sm mb-2">{comment.content}</p>
-                                                        
+
                                                         {/* Comment Actions */}
                                                         <div className="flex items-center gap-4">
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleLikeComment(comment.id)}
                                                                 className={`flex items-center gap-1.5 text-sm transition-colors ${comment.likedByUser ? 'text-amber-400' : 'text-zinc-500 hover:text-zinc-300'}`}
                                                             >
                                                                 <HandThumbUpIcon className="w-4 h-4" />
                                                                 <span>{comment.likes || 0}</span>
                                                             </button>
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleDislikeComment(comment.id)}
                                                                 className={`flex items-center gap-1.5 text-sm transition-colors ${comment.dislikedByUser ? 'text-amber-400' : 'text-zinc-500 hover:text-zinc-300'}`}
                                                             >
                                                                 <HandThumbDownIcon className="w-4 h-4" />
                                                             </button>
-                                                            <button 
+                                                            <button
                                                                 onClick={() => setReplyToComment(replyToComment === comment.id ? null : comment.id)}
                                                                 className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
                                                             >
                                                                 Reply
                                                             </button>
                                                             {user?.id === comment.userId && (
-                                                                <button 
+                                                                <button
                                                                     onClick={() => handleDeleteComment(comment.id)}
                                                                     className="text-zinc-500 hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
                                                                 >
@@ -478,15 +482,15 @@ const WatchPage = () => {
                                                                     autoFocus
                                                                 />
                                                                 <div className="flex justify-end gap-2 mt-2">
-                                                                    <button 
-                                                                        type="button" 
+                                                                    <button
+                                                                        type="button"
                                                                         onClick={() => { setReplyToComment(null); setNewReply(''); }}
                                                                         className="watch-btn-ghost text-sm py-1.5"
                                                                     >
                                                                         Cancel
                                                                     </button>
-                                                                    <button 
-                                                                        type="submit" 
+                                                                    <button
+                                                                        type="submit"
                                                                         disabled={!newReply.trim()}
                                                                         className="watch-btn-accent text-sm py-1.5"
                                                                     >
@@ -498,7 +502,7 @@ const WatchPage = () => {
 
                                                         {/* Replies Toggle */}
                                                         {comment.replies?.length > 0 && (
-                                                            <button 
+                                                            <button
                                                                 onClick={() => setToggleReplies(toggleReplies === comment.id ? null : comment.id)}
                                                                 className="flex items-center gap-1.5 mt-3 text-sm text-amber-400 hover:text-amber-300 transition-colors"
                                                             >
@@ -536,7 +540,7 @@ const WatchPage = () => {
                                                                                     <HandThumbDownIcon className="w-3.5 h-3.5" />
                                                                                 </button>
                                                                                 {user?.id === reply.userId && (
-                                                                                    <button 
+                                                                                    <button
                                                                                         onClick={() => handleDeleteComment(reply.id)}
                                                                                         className="text-zinc-500 hover:text-rose-400 opacity-0 group-hover/reply:opacity-100 transition-opacity"
                                                                                     >
@@ -573,10 +577,10 @@ const WatchPage = () => {
                                 <PlayIcon className="w-5 h-5 text-amber-400" />
                                 Up Next
                             </h2>
-                            
+
                             <div className="space-y-3 max-h-[calc(100vh-150px)] overflow-y-auto watch-scrollbar pr-2">
                                 {relatedVideos.map((relatedVideo) => (
-                                    <div 
+                                    <div
                                         key={relatedVideo.id}
                                         onClick={() => navigateWithLoading(`/watch/${relatedVideo.id}`)}
                                         className="watch-card p-2 flex gap-3 cursor-pointer group"
