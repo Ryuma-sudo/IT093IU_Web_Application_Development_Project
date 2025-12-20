@@ -287,6 +287,31 @@ h6 {
     min-height: 100vh;
 }
 
+/* YouTube player UI hiding */
+iframe[src*="youtube.com"],
+iframe[src*="youtu.be"] {
+    pointer-events: auto;
+}
+
+/* Hide YouTube title and share button overlay */
+.ytp-title,
+.ytp-title-link,
+.ytp-title-text,
+.ytp-share-button,
+.ytp-share-button-visible,
+.ytp-ce-element,
+.ytp-watermark {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Hide YouTube top bar elements */
+.ytp-chrome-top,
+.ytp-show-cards-title {
+    display: none !important;
+}
+
 .watch-glass {
     background: rgba(24, 24, 27, 0.8);
     backdrop-filter: blur(16px);
