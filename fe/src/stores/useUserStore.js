@@ -3,13 +3,19 @@ import axios from "../config/axios";
 import { toast } from "react-hot-toast";
 import Cookies from 'js-cookie';
 
-export const useUserStore = create((set) => ({
+export const useUserStore = create((set, get) => ({
 	user: null,
 	userInfo: [],
 	token: null,
 	loading: false,
 	checkingAuth: false,
 	isUpdatingProfile: false,
+
+	// Helper to check if current user is admin
+	isAdmin: () => {
+		const user = get().user;
+		return user?.roles?.includes('ROLE_ADMIN') || false;
+	},
 
 	signup: async ({ username, email, password }) => {
 		set({ loading: true });

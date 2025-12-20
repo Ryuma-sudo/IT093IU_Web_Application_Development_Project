@@ -15,6 +15,7 @@ import ProfilePage from './pages/ProfilePage'
 import WatchListPage from './pages/WatchListPage'
 import SearchPage from './pages/SearchPage'
 import AdminPage from './pages/AdminPage'
+import UserDashboard from './pages/UserDashboard'
 
 import { useUserStore } from "./stores/useUserStore"
 
@@ -22,13 +23,13 @@ import { useUserStore } from "./stores/useUserStore"
 const HomePage = lazy(() => import('./pages/HomePage'));
 
 const App = () => {
-    const { user, checkAuth, checkingAuth } = useUserStore();
+    const { user, checkAuth, checkingAuth, isAdmin } = useUserStore();
 
     useEffect(() => {
         checkAuth();
     }, [checkAuth]);
 
-    if (checkingAuth) return <LoadingSpinner />;    return (
+    if (checkingAuth) return <LoadingSpinner />; return (
         <LoadingBarProvider>
             <div className="bg-nf-bg min-h-screen">
                 <ScrollToTop />
@@ -49,7 +50,8 @@ const App = () => {
                     <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/" />} />
                     <Route path="/watchlist/:id" element={user ? <WatchListPage /> : <Navigate to="/" />} />
 
-                    <Route path="/admin/:id" element={<AdminPage />} />
+                    <Route path="/dashboard/:id" element={user ? <UserDashboard /> : <Navigate to="/login" />} />
+                    <Route path="/admin/:id" element={user && isAdmin() ? <AdminPage /> : <Navigate to="/" />} />
                 </Routes>
 
                 <Footer />

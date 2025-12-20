@@ -6,7 +6,7 @@ import OptimizedImage from './OptimizedImage'
 import { useNavigateWithLoading } from '../hooks/useNavigateWithLoading'
 
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { LockClosedIcon, BookmarkIcon, Bars3Icon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { LockClosedIcon, BookmarkIcon, Bars3Icon, XMarkIcon, MagnifyingGlassIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
 
 import { useVideoStore } from '../stores/useVideoStore';
 import { useUserStore } from "../stores/useUserStore";
@@ -23,7 +23,7 @@ const Navbar = () => {
     const [searchQuery, setSearchQuery] = useState('')
     const searchRef = useRef(null)
 
-    const { user, logout } = useUserStore();
+    const { user, logout, isAdmin } = useUserStore();
 
     const recentSearches = ["action movies", "sci-fi", "christopher nolan"]
 
@@ -150,14 +150,25 @@ const Navbar = () => {
                                     </AnimatePresence>
                                 </div>
 
-                                {/* Admin Dashboard */}
+                                {/* My Dashboard - for all users */}
                                 <Link
-                                    to={`/admin/${user.id}`}
-                                    className="p-2.5 text-nf-text-muted hover:text-nf-secondary rounded-lg hover:bg-nf-surface transition-all duration-200"
-                                    title="Admin Dashboard"
+                                    to={`/dashboard/${user.id}`}
+                                    className="p-2.5 text-nf-text-muted hover:text-nf-accent rounded-lg hover:bg-nf-surface transition-all duration-200"
+                                    title="My Dashboard"
                                 >
-                                    <LockClosedIcon aria-hidden="true" className="size-5" />
+                                    <Squares2X2Icon aria-hidden="true" className="size-5" />
                                 </Link>
+
+                                {/* Admin Dashboard - only for admins */}
+                                {isAdmin() && (
+                                    <Link
+                                        to={`/admin/${user.id}`}
+                                        className="p-2.5 text-nf-text-muted hover:text-nf-secondary rounded-lg hover:bg-nf-surface transition-all duration-200"
+                                        title="Admin Dashboard"
+                                    >
+                                        <LockClosedIcon aria-hidden="true" className="size-5" />
+                                    </Link>
+                                )}
 
                                 {/* Watch List */}
                                 <Link
@@ -247,12 +258,21 @@ const Navbar = () => {
                                 Watch List
                             </Link>
                             <Link
-                                to={`/admin/${user.id}`}
+                                to={`/dashboard/${user.id}`}
                                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-nf-text-secondary hover:bg-nf-surface-hover hover:text-nf-text transition-colors"
                             >
-                                <LockClosedIcon className="w-5 h-5" />
-                                Admin Dashboard
+                                <Squares2X2Icon className="w-5 h-5" />
+                                My Dashboard
                             </Link>
+                            {isAdmin() && (
+                                <Link
+                                    to={`/admin/${user.id}`}
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-nf-text-secondary hover:bg-nf-surface-hover hover:text-nf-text transition-colors"
+                                >
+                                    <LockClosedIcon className="w-5 h-5" />
+                                    Admin Dashboard
+                                </Link>
+                            )}
                         </>
                     )}
                 </div>

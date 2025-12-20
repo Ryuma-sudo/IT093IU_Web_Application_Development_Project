@@ -6,11 +6,23 @@ import Cookies from 'js-cookie';
 export const useVideoStore = create((set) => ({
 	videos: [],
 	video: [],
+	userVideos: [],
 	similarVideos: [],
 	searchResults: [],
 	loading: false,
 
 	setVideos: (videos) => set({ videos }),
+
+	fetchVideosByUser: async (userId) => {
+		set({ loading: true });
+		try {
+			const response = await axios.get(`/videos/uploader/${userId}`, { withCredentials: true });
+			set({ userVideos: response.data, loading: false });
+		} catch (error) {
+			set({ error: "Failed to fetch user videos", loading: false });
+			toast.error(error.response?.data?.error || "Failed to fetch user videos");
+		}
+	},
 
 	createVideo: async (videoData) => {
 		set({ loading: true });

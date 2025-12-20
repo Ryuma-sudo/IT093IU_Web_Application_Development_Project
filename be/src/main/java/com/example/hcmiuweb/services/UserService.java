@@ -36,7 +36,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
-    
+
     public User updateUser(User user) {
         // Don't re-encode password if it's the same as before
         if (user.getId() != null) {
@@ -46,5 +46,39 @@ public class UserService {
             }
         }
         return userRepository.save(user);
+    }
+
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
+
+    /**
+     * Update only the user's role without modifying other fields
+     */
+    public User updateUserRole(Long userId, com.example.hcmiuweb.entities.Role newRole) {
+        return userRepository.findById(userId)
+                .map(user -> {
+                    user.setRole(newRole);
+                    return userRepository.save(user);
+                })
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    /**
+     * Change user password
+     */
+    public boolean changePassword(Long userId, String currentPassword, String newPassword) {
+        return userRepository.findById(userId)
+                .map(user -> {
+                    // Verify current password
+                    if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                        return false;
+                    }
+                    // Set new password (encoded)
+                    user.setPassword(passwordEncoder.encode(newPassword));
+                    userRepository.save(user);
+                    return true;
+                })
+                .orElse(false);
     }
 }

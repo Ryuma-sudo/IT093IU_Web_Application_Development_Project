@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
+import axios from '../config/axios';
 
 import { useUserStore } from "../stores/useUserStore";
 
-import { UserIcon, EnvelopeIcon, CalendarIcon, CheckBadgeIcon } from '@heroicons/react/24/solid';
-import { CameraIcon } from '@heroicons/react/24/outline';
+import { UserIcon, EnvelopeIcon, CalendarIcon, CheckBadgeIcon, KeyIcon } from '@heroicons/react/24/solid';
+import { CameraIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import OptimizedImage from '../components/OptimizedImage';
 import AvatarSelector from '../components/AvatarSelector';
 
@@ -11,6 +13,20 @@ const ProfilePage = () => {
     const { user, userInfo, fetchUser, isUpdatingProfile, updateProfile, updateAvatarUrl } = useUserStore();
     const [selectedImg, setSelectedImg] = useState(null);
     const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+
+    // Password change state
+    const [showPasswordForm, setShowPasswordForm] = useState(false);
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+    const [showPasswords, setShowPasswords] = useState({
+        current: false,
+        new: false,
+        confirm: false
+    });
+    const [changingPassword, setChangingPassword] = useState(false);
 
     const handleUpload = async (file) => {
         if (!file) return;
@@ -35,6 +51,36 @@ const ProfilePage = () => {
             setShowAvatarSelector(false);
         } catch (error) {
             console.error('Failed to update avatar:', error);
+        }
+    };
+
+    const handlePasswordChange = async (e) => {
+        e.preventDefault();
+
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            toast.error('New passwords do not match');
+            return;
+        }
+
+        if (passwordData.newPassword.length < 6) {
+            toast.error('Password must be at least 6 characters');
+            return;
+        }
+
+        setChangingPassword(true);
+        try {
+            await axios.put(`/users/${user.id}/password`, {
+                currentPassword: passwordData.currentPassword,
+                newPassword: passwordData.newPassword
+            }, { withCredentials: true });
+
+            toast.success('Password changed successfully');
+            setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            setShowPasswordForm(false);
+        } catch (error) {
+            toast.error(error.response?.data || 'Failed to change password');
+        } finally {
+            setChangingPassword(false);
         }
     };
 
@@ -76,9 +122,8 @@ const ProfilePage = () => {
                                 </div>
                                 <button
                                     onClick={() => setShowAvatarSelector(!showAvatarSelector)}
-                                    className={`absolute bottom-0 right-0 p-2.5 rounded-full bg-nf-accent text-nf-bg transition-all duration-200 cursor-pointer hover:bg-nf-accent-hover ${
-                                        isUpdatingProfile ? "animate-pulse pointer-events-none" : ""
-                                    }`}
+                                    className={`absolute bottom-0 right-0 p-2.5 rounded-full bg-nf-accent text-nf-bg transition-all duration-200 cursor-pointer hover:bg-nf-accent-hover ${isUpdatingProfile ? "animate-pulse pointer-events-none" : ""
+                                        }`}
                                 >
                                     <CameraIcon className="w-5 h-5" />
                                 </button>
@@ -154,6 +199,95 @@ const ProfilePage = () => {
                                     </span>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Password Change Section */}
+                        <div className="mt-6 p-5 rounded-xl bg-nf-bg border border-nf-border">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-semibold text-nf-text flex items-center gap-2">
+                                    <KeyIcon className="w-5 h-5 text-nf-accent" />
+                                    Password
+                                </h2>
+                                <button
+                                    onClick={() => setShowPasswordForm(!showPasswordForm)}
+                                    className="text-sm text-nf-accent hover:text-nf-accent-hover transition-colors cursor-pointer"
+                                >
+                                    {showPasswordForm ? 'Cancel' : 'Change Password'}
+                                </button>
+                            </div>
+
+                            {showPasswordForm && (
+                                <form onSubmit={handlePasswordChange} className="space-y-4 animate-fade-in">
+                                    <div>
+                                        <label className="block text-sm text-nf-text-muted mb-2">Current Password</label>
+                                        <div className="relative">
+                                            <input
+                                                type={showPasswords.current ? 'text' : 'password'}
+                                                value={passwordData.currentPassword}
+                                                onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                                                className="nf-input pr-10"
+                                                required
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-nf-text-muted hover:text-nf-text cursor-pointer"
+                                            >
+                                                {showPasswords.current ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm text-nf-text-muted mb-2">New Password</label>
+                                        <div className="relative">
+                                            <input
+                                                type={showPasswords.new ? 'text' : 'password'}
+                                                value={passwordData.newPassword}
+                                                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                                className="nf-input pr-10"
+                                                required
+                                                minLength={6}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-nf-text-muted hover:text-nf-text cursor-pointer"
+                                            >
+                                                {showPasswords.new ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm text-nf-text-muted mb-2">Confirm New Password</label>
+                                        <div className="relative">
+                                            <input
+                                                type={showPasswords.confirm ? 'text' : 'password'}
+                                                value={passwordData.confirmPassword}
+                                                onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                                className="nf-input pr-10"
+                                                required
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-nf-text-muted hover:text-nf-text cursor-pointer"
+                                            >
+                                                {showPasswords.confirm ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={changingPassword}
+                                        className="w-full nf-btn nf-btn-primary"
+                                    >
+                                        {changingPassword ? 'Changing...' : 'Change Password'}
+                                    </button>
+                                </form>
+                            )}
                         </div>
                     </div>
                 </div>
