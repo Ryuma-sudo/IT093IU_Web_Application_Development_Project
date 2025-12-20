@@ -81,8 +81,8 @@ const UserDashboard = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-200 cursor-pointer ${activeTab === tab.id
-                    ? "bg-nf-accent text-nf-bg"
-                    : "text-nf-text-secondary hover:text-nf-text hover:bg-nf-surface-hover"
+                  ? "bg-nf-accent text-nf-bg"
+                  : "text-nf-text-secondary hover:text-nf-text hover:bg-nf-surface-hover"
                   }`}
               >
                 <tab.icon className="w-5 h-5" />
@@ -99,7 +99,7 @@ const UserDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {activeTab === "create" && <CreateVideoForm />}
+          {activeTab === "create" && <CreateVideoForm onSuccess={() => setActiveTab("videos")} />}
           {activeTab === "videos" && <VideoList showOnlyUserVideos={true} userId={parseInt(id)} />}
         </motion.div>
       </div>

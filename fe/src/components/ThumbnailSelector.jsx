@@ -1,18 +1,42 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { AVAILABLE_THUMBNAILS, getThumbnailPath } from '../utils/thumbnailAssets';
-import { PhotoIcon, LinkIcon, CheckIcon, CloudArrowUpIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import { PhotoIcon, LinkIcon, CheckIcon, CloudArrowUpIcon, XMarkIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
 import axios from '../config/axios';
 
-const ThumbnailSelector = ({ value, onChange }) => {
+/**
+ * Convert a Cloudinary video URL to a thumbnail URL
+ */
+const getAutoThumbnailFromVideo = (videoUrl) => {
+  if (!videoUrl) return null;
+  if (!videoUrl.includes('cloudinary.com')) return null;
+
+  try {
+    const url = new URL(videoUrl);
+    const pathParts = url.pathname.split('/').filter(p => p);
+    const uploadIndex = pathParts.findIndex(part => part === 'upload');
+    if (uploadIndex === -1) return null;
+
+    const cloudName = pathParts[0];
+    const publicIdParts = pathParts.slice(uploadIndex + 1);
+    const publicIdWithExt = publicIdParts.join('/');
+    const cleanPath = publicIdWithExt.replace(/^v\d+\//, '');
+    const pathWithoutExt = cleanPath.replace(/\.[^/.]+$/, '');
+
+    return `${url.origin}/${cloudName}/video/upload/so_auto,w_640,h_360,c_fill,f_jpg/${pathWithoutExt}.jpg`;
+  } catch (e) {
+    console.error('Error parsing video URL:', e);
+    return null;
+  }
+};
+
+const ThumbnailSelector = ({ value, onChange, videoUrl }) => {
   const selectedThumbnail = AVAILABLE_THUMBNAILS.find(t =>
     value === getThumbnailPath(t.filename) || value === t.filename
   );
 
-  const isCustomValue = value && !selectedThumbnail && (value.startsWith('http://') || value.startsWith('https://'));
-
-  const [mode, setMode] = useState(isCustomValue ? 'custom' : 'existing');
-  const [customUrl, setCustomUrl] = useState(isCustomValue ? value : '');
+  const [mode, setMode] = useState('existing');
+  const [customUrl, setCustomUrl] = useState('');
 
   // Upload state
   const fileInputRef = useRef(null);
@@ -20,41 +44,34 @@ const ThumbnailSelector = ({ value, onChange }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedPreview, setUploadedPreview] = useState(null);
 
-  useEffect(() => {
-    if (value && !selectedThumbnail && (value.startsWith('http://') || value.startsWith('https://'))) {
-      setCustomUrl(value);
-      setMode('custom');
-    }
-  }, [value, selectedThumbnail]);
-
-  useEffect(() => {
-    if (mode === 'custom' && customUrl) {
-      onChange(customUrl);
-    }
-  }, [mode, customUrl, onChange]);
+  const autoThumbnail = getAutoThumbnailFromVideo(videoUrl);
 
   const handleCustomUrlChange = (url) => {
     setCustomUrl(url);
-    if (mode === 'custom') {
-      onChange(url);
-    }
+    onChange(url);
   };
 
   const handleSelectExisting = (thumbnail) => {
     onChange(getThumbnailPath(thumbnail.filename));
   };
 
+  const handleAutoThumbnail = () => {
+    if (autoThumbnail) {
+      onChange(autoThumbnail);
+      setMode('existing'); // Stay on existing mode, just apply the auto thumbnail
+      toast.success('Auto-generated thumbnail from video!');
+    }
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file');
       return;
     }
 
-    // Validate file size (10MB max)
     if (file.size > 10 * 1024 * 1024) {
       toast.error('Image must be less than 10MB');
       return;
@@ -68,9 +85,7 @@ const ThumbnailSelector = ({ value, onChange }) => {
       formData.append('file', file);
 
       const response = await axios.post('/uploads/thumbnail', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (progressEvent) => {
           const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(progress);
@@ -98,21 +113,21 @@ const ThumbnailSelector = ({ value, onChange }) => {
     }
   };
 
-  const getPreviewSrc = () => {
-    if (mode === 'existing' && selectedThumbnail) {
-      return getThumbnailPath(selectedThumbnail.filename);
-    } else if (mode === 'custom' && customUrl) {
-      return customUrl;
-    } else if (mode === 'upload' && uploadedPreview) {
-      return uploadedPreview;
-    }
-    return null;
-  };
-
-  const previewSrc = getPreviewSrc();
-
   return (
     <div className="space-y-4">
+      {/* Auto Generate Button - only show if Cloudinary video uploaded */}
+      {autoThumbnail && (
+        <button
+          type="button"
+          onClick={handleAutoThumbnail}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer
+            bg-nf-accent text-nf-bg shadow-lg shadow-nf-accent/20 hover:bg-nf-accent/90"
+        >
+          <SparklesIcon className="w-4 h-4" />
+          Auto-Generate from Video
+        </button>
+      )}
+
       {/* Mode Selector Tabs */}
       <div className="flex gap-2 flex-wrap">
         <button
@@ -276,15 +291,16 @@ const ThumbnailSelector = ({ value, onChange }) => {
         )}
       </div>
 
-      {/* Preview Section */}
-      {previewSrc && (
+      {/* Current Selection Preview */}
+      {value && (
         <div className="bg-nf-bg rounded-xl p-4 border border-nf-border">
           <p className="text-sm text-nf-text-muted mb-3">Selected Thumbnail:</p>
           <div className="flex justify-center">
             <img
-              src={previewSrc}
+              src={value}
               alt="Selected thumbnail"
               className="max-h-32 rounded-lg object-contain shadow-md"
+              onError={(e) => e.target.style.display = 'none'}
             />
           </div>
         </div>

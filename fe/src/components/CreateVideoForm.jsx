@@ -9,7 +9,7 @@ import { useCategoryStore } from "../stores/useCategoryStore";
 import ThumbnailSelector from "./ThumbnailSelector";
 import { FilmIcon, DocumentTextIcon, LinkIcon, PhotoIcon, TagIcon, CloudArrowUpIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
-const CreateVideoForm = () => {
+const CreateVideoForm = ({ onSuccess }) => {
 	const { id } = useParams();
 	const { createVideo, loading } = useVideoStore();
 	const { categories, fetchAllCategories } = useCategoryStore();
@@ -103,6 +103,10 @@ const CreateVideoForm = () => {
 			setVideoPreview(null);
 			setUploadedVideoName('');
 			setUploadProgress(0);
+			// Call onSuccess callback to switch tabs if provided
+			if (onSuccess) {
+				onSuccess();
+			}
 		} catch {
 			console.log("Error creating a new video");
 		}
@@ -297,6 +301,7 @@ const CreateVideoForm = () => {
 					<ThumbnailSelector
 						value={newVideo.thumbnailUrl}
 						onChange={(url) => setNewVideo({ ...newVideo, thumbnailUrl: url })}
+						videoUrl={newVideo.url}
 					/>
 				</div>
 
