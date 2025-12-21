@@ -89,11 +89,11 @@ Full-stack web application for video streaming and management
 - **Containerization**: Docker & Docker Compose
 - **Reverse Proxy**: Nginx
 - **Database**: MySQL 8.0
-- **File Storage**: Local filesystem + Cloudinary (for images/avatars)
+- **File Storage**: Cloudinary (for videos, images, and avatars)
 - **Version Control**: Git
 
 ### External Services
-- **Cloudinary**: Image and avatar storage
+- **Cloudinary**: Video, image, and avatar storage (cloud-based)
 - **Email Service**: Gmail SMTP for password reset
 
 ---
@@ -274,6 +274,7 @@ src/main/java/com/example/hcmiuweb/
 **CloudinaryService**
 - Image upload to Cloudinary
 - Avatar management
+- Video upload to Cloudinary (videos stored in cloud storage)
 
 #### 3. Controller Layer
 
@@ -308,8 +309,14 @@ src/main/java/com/example/hcmiuweb/
 - `POST /comment` - Rate a comment
 - `GET /video/{videoId}` - Get video rating
 
+**FileUploadController** (`/api/uploads`)
+- `POST /video` - Upload video file to Cloudinary
+- `POST /avatar` - Upload avatar image to Cloudinary
+- `POST /avatar-url` - Set avatar from URL
+- `POST /thumbnail` - Upload thumbnail image to Cloudinary
+
 **Other Controllers**
-- CategoryController, TagController, SubscriptionController, WatchListController, NotificationController, FileUploadController, UserController
+- CategoryController, TagController, SubscriptionController, WatchListController, NotificationController, UserController
 
 #### 4. Security Configuration
 
@@ -883,11 +890,13 @@ Rate a comment (authenticated).
 ### File Upload Endpoints
 
 #### POST /api/uploads/video
-Upload video file.
+Upload video file to Cloudinary.
 
 **Request:** Multipart form data with `file` field
 
-**Response:** `200 OK` with video URL
+**Response:** `200 OK` with video URL (Cloudinary secure URL)
+
+**Storage Location:** Videos are stored on Cloudinary cloud storage service, not locally. The Cloudinary URL is saved in the database (`video.url` field).
 
 #### POST /api/uploads/avatar
 Upload avatar to Cloudinary.
@@ -920,8 +929,23 @@ Set avatar from URL.
 - **Database Service**: MySQL 8.0 on port 3307
 - **Volume Mounts**: 
   - Frontend code for hot reload
-  - Video uploads directory
+  - Video uploads directory (`./uploaded-videos:/app/videos`) - Note: Currently not used for video storage
   - Database persistent storage
+
+### File Storage
+
+**Video Storage:**
+- **Primary Storage**: Videos are uploaded to **Cloudinary** cloud storage service
+- **Storage Location**: Cloudinary's cloud infrastructure (not local filesystem)
+- **Database Storage**: Only the video URL (Cloudinary secure URL) is stored in the MySQL database (`video.url` column)
+- **Local Directory**: The `/app/videos` directory is configured in `application.properties` (`file.upload-dir=/app/videos`) and mounted in Docker, but is **not currently used** for video storage. All videos are stored on Cloudinary.
+
+**Image Storage:**
+- **Avatars**: Stored on Cloudinary (in "avatars" folder)
+- **Thumbnails**: Stored on Cloudinary (in "thumbnails" folder)
+
+**Alternative Video Input:**
+- Users can also provide video URLs directly (without uploading), which are stored as-is in the database
 
 **Dockerfile (Frontend)**
 - Node.js base image
@@ -954,9 +978,10 @@ Set avatar from URL.
 **Backend (application.properties)**
 - Database connection settings
 - JWT secret and expiration
-- Cloudinary credentials
+- Cloudinary credentials (for video and image storage)
 - Email SMTP settings
-- File upload limits
+- File upload limits (500MB max for videos, 100MB enforced in code)
+- File upload directory (`file.upload-dir=/app/videos`) - configured but not used (videos stored on Cloudinary)
 
 **Frontend (Environment Variables)**
 - API base URL configuration
