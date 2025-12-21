@@ -287,6 +287,27 @@ public class VideoController {
         }
     }
 
+    @GetMapping("/{id}/analytics")
+    public ResponseEntity<?> getVideoAnalytics(@PathVariable Long id) {
+        try {
+            // Check if user is admin
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+
+            if (!isAdmin) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Only admins can view video analytics");
+            }
+
+            Map<String, Object> analytics = videoService.getVideoAnalytics(id);
+            return ResponseEntity.ok(analytics);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error fetching analytics: " + e.getMessage());
+        }
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleException(Exception e) {
         e.printStackTrace();
